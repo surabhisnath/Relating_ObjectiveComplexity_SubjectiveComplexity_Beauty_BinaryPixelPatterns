@@ -1,0 +1,25 @@
+Python libraries:
+numpy
+pybdm
+sys
+matplotlib
+imageio
+re
+pandas
+os
+statsmodels
+seaborn
+scipy
+
+
+R libraries:
+lme4
+ggplot2
+interactions
+dplyr
+mediation
+
+
+
+
+
