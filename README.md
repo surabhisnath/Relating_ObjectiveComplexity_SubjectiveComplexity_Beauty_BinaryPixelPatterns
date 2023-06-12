@@ -11,4 +11,7 @@ The complexity of images critically influences our assessment of their beauty. H
 The repository contains the following folders:
 - **data**: contains the processed .csv data files from 80 participants. Each file has 6 columns indicating the pattern number, complexity reponse (0-100), beauty response (0-100), reaction time (ms), is_repeated flag which indicates if the pattern is repeated (6 patterns were repeated for each participant) and trial number. The dictionary mapping pattern names to pattern numbers is provided in `scrips/utils/pattern_to_num.pk`. The data folder also has info.csv which stores participant details such as dmeographics, open-ended reponses, number of attention checks presented/failed and total time taken.
 - **figures**: contains all the figures in the main paper as PDFs.
-- **generator**: 
+- **generator**: `generator/cellular_automata.py` is the stimuli generation script. Generates 2 folders `generator/stimuli/` containing all stimuli and `generator/gifs/` containing stimuli evolutions saved as .gif files.
+- **measures**: this folder contains implementations of all pattern quantification measures described in Section 2.2 in the paper. 
+- **patterns**: contains all the patterns used in the experiment in the folder `15by15`. `instructions` folder contains the patterns used in the task description, `attentioncheck` folder consists of the patterns which were used as attention checks. `experiment` folder consists of 4 sets each with 54 patterns used in the experiment.
+- **scripts**: contains analyses scripts `DescriptiveAnalysis.ipynb` and `MixedEffectsModelling.R`. Plots and model fits are stored in `plots` and `model_fits` respectively.
