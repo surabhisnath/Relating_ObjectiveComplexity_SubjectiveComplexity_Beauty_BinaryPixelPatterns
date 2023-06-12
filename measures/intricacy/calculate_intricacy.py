@@ -1,24 +1,26 @@
-"""
-Author: Surabhi S Nath
-"""
-
+author = 'Surabhi S Nath'
 import numpy as np
 import sys
 
-#Source: GeeksforGeeks: https://www.geeksforgeeks.org/program-to-count-number-of-connected-components-in-an-undirected-graph/
+# Code based on GeeksforGeeks: https://www.geeksforgeeks.org/program-to-count-number-of-connected-components-in-an-undirected-graph/
 
 class Graph:
+    """
+    This class defines the class graph
+    """
     def __init__(self, V):
  
-        # No. of vertices
-        self.V = V
- 
-        # Pointer to an array containing adjacency lists
-        self.adj = [[] for i in range(self.V)]
+        self.V = V      # No. of vertices
+        self.adj = [[] for i in range(self.V)]      # Pointer to an array containing adjacency lists
  
     # Function to return the number of connected components in an undirected graph
     def NumberOfconnectedComponents(self):
-         
+        """
+        Calculates the number of components in the pattern
+
+        Returns:
+            integer: the number of components
+        """
         # Mark all the vertices as not visited
         visited = [False for i in range(self.V)]
         
@@ -33,7 +35,13 @@ class Graph:
         return count
          
     def DFSUtil(self, v, visited):
- 
+        """
+        Recursive function for DFS
+
+        Args:
+            v (integer): vertex id
+            visited (array): indicates if the vertex is visited
+        """
         # Mark the current node as visited
         visited[v] = True
  
@@ -47,7 +55,20 @@ class Graph:
         self.adj[v].append(w)
         self.adj[w].append(v)
 
-def get_neigh(grid, rnum, cnum, dirn, grid_size): # Origin: top left of matrix
+def get_neigh(grid, rnum, cnum, dirn, grid_size):   # Origin: top left of matrix
+    """
+    Gets neighbouring cell based on direction
+
+    Args:
+        grid (array): CA grid
+        rnum (integer): row index
+        cnum (integer): column index
+        dirn (integer): 0-7 indicating the direction of nieghbour
+        grid_size (integer): grid size of CA grid
+
+    Returns:
+        _type_: _description_
+    """
     if dirn == 0: # Up
         if rnum > 0:
             return grid[rnum-1, cnum], rnum-1, cnum
@@ -77,20 +98,47 @@ def get_neigh(grid, rnum, cnum, dirn, grid_size): # Origin: top left of matrix
 def calculate_intricacy(grid, grid_size):
     """
     This function calculates the 4-neighbourhood and 8-neighbourhood intricacy of a pattern.
+    
+    Returns:
+        tuple: 4-neighbourhood and 8-netghbourhood intricacy
     """
-    g1 = Graph(grid_size * grid_size) # 4-neighbourhood
-    g2 = Graph(grid_size * grid_size) # 8-neighbourhood
+    grid = grid.reshape(grid_size, grid_size)
+    g1 = Graph(grid_size * grid_size)       # 4-neighbourhood
+    g2 = Graph(grid_size * grid_size)       # 8-neighbourhood
 
     for rnum in range(grid_size):
         for cnum in range(grid_size):
-            for dirn in range(4): # 4-neighbourhood intricacy
+            for dirn in range(4):           # 4-neighbourhood intricacy
                 neigh = get_neigh(grid, rnum, cnum, dirn, grid_size)
                 if neigh[0] == grid[rnum, cnum]:
                     g1.addEdge(neigh[1] * grid_size + neigh[2], rnum * grid_size + cnum)
             
-            for dirn in range(8): # 8-neighbourhood intricacy
+            for dirn in range(8):           # 8-neighbourhood intricacy
                 neigh = get_neigh(grid, rnum, cnum, dirn, grid_size)
                 if neigh[0] == grid[rnum, cnum]:
                     g2.addEdge(neigh[1] * grid_size + neigh[2], rnum * grid_size + cnum)
 
     return g1.NumberOfconnectedComponents(), g2.NumberOfconnectedComponents()
+
+if __name__ == "__main__":
+    grid_size = 15
+
+    # calculate density for some example patterns:
+    #    1) Full black pattern
+    #    2) White grid with one central black CellType
+    #    3) Checkarboard
+    #    4) Random pattern
+    
+    all_black = np.ones(grid_size * grid_size)
+    print(calculate_intricacy(all_black, grid_size))
+
+    grid_with_one_centre = np.zeros(grid_size * grid_size)
+    grid_with_one_centre[(grid_size * grid_size) //2] = 1
+    print(calculate_intricacy(grid_with_one_centre, grid_size))
+
+    checkarboard = np.zeros(grid_size * grid_size)
+    checkarboard[1::2] = 1
+    print(calculate_intricacy(checkarboard, grid_size))
+
+    random = np.random.choice([0, 1], size=(grid_size, grid_size))
+    print(calculate_intricacy(random, grid_size))

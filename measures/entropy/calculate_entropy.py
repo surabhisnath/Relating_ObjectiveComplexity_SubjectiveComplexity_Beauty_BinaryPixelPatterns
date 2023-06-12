@@ -1,36 +1,51 @@
-"""
-Python implementation of the matrix information measurement examples from the
-StackExchange answer written by WilliamAHuber for
-"Measuring entropy/ information/ patterns of a 2d binary matrix"
-http://stats.stackexchange.com/a/17556/43909
+author = 'Surabhi S Nath'
+import numpy as np
+import math
 
-Copyright 2014 Cosmo Harrigan
-This program is free software, distributed under the terms of the GNU LGPL v3.0
-"""
+def calculate_entropy(gridorflatgrid, grid_size):
+    """
+    This function calculates the singlescale entropy of the pattern
 
-author = 'Cosmo Harrigan'
+    Args:
+        gridorflatgrid (array): pattern
+        grid_size (integer): grid size of the pattern
 
-from matplotlib import pyplot
-from neighborhood_functions import avg_components
-from moving_window_filter import moving_window_filter
-from calculate_profile import profile
-import matplotlib.pyplot as plt
-import matplotlib
+    Returns:
+        float: entropy of the pattern
+    """
 
-# Function to apply
-F = avg_components
+    flatgrid = gridorflatgrid.reshape((1, grid_size * grid_size))
 
-# Define the matrices as input_matrices
-from data import *
+    uniq, cnts = np.unique(flatgrid, return_counts=True)
+    assert len(uniq) == len(cnts) < 3
+    if len(uniq) == 1:
+        return 0
+    
+    p1 = cnts[0]/(cnts[0] + cnts[1])        # fraction of white pixels
+    p2 = cnts[1]/(cnts[0] + cnts[1])        # fraction of black pixels
 
-def calculate_entropy(flatgrid, grid_size):
-    # Produce the filtered matrices at varying scales and the associated entropy "profiles"
-    flatgrid = flatgrid.reshape((grid_size, grid_size))
-    matrices = []
-    for n in range(1, min(flatgrid.shape)):
-        output_matrix = moving_window_filter(matrix=flatgrid,
-                                             f=F,
-                                             neighborhood_size=n)
-        matrices.append(output_matrix)
+    entropy = -1 * (p1 * math.log(p1,2) + p2 * math.log(p2,2))      # entropy equation (Eq. 1)
+    return entropy
+    
+if __name__ == '__main__':
+    grid_size = 15
 
-    return np.mean(profile(matrices))
+    # calculate density for some example patterns:
+    #    1) Full black pattern
+    #    2) White grid with one central black CellType
+    #    3) Checkarboard
+    #    4) Random pattern
+
+    all_black = np.ones(grid_size * grid_size, dtype=int)
+    print(calculate_entropy(all_black, grid_size))
+
+    grid_with_one_centre = np.zeros(grid_size * grid_size, dtype=int)
+    grid_with_one_centre[(grid_size * grid_size) //2] = 1
+    print(calculate_entropy(grid_with_one_centre, grid_size))
+
+    checkarboard = np.zeros(grid_size * grid_size, dtype=int)
+    checkarboard[1::2] = 1
+    print(calculate_entropy(checkarboard, grid_size))
+
+    random = np.random.choice([0, 1], size=(grid_size, grid_size))
+    print(calculate_entropy(random, grid_size))

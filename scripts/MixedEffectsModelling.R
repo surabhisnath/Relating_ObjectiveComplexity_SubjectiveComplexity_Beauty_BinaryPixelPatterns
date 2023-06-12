@@ -8,6 +8,7 @@
   library(interactions)
   library(dplyr)
   library(mediation)
+  
   # Set seed
   set.seed(20)
 }
@@ -33,7 +34,9 @@ ggCaterpillar <- function(re, QQ=FALSE, likeDotplot=TRUE, detailedFacetLabs = TR
       p <- ggplot(pDf, aes_string(x="nQQ", y="y"))
       p <- p + facet_wrap(~ ind, scales="free")
       p <- p + xlab("Standard normal quantiles") + ylab("Random effect quantiles")
-    } else {  ## caterpillar dotplot
+    } 
+    
+    else {  ## caterpillar dotplot
       p <- ggplot(pDf, aes_string(x="ID", y="y")) + coord_flip()
       if(likeDotplot) {  ## imitate dotplot() -> same scales for random effects
         p <- p + facet_wrap(~ ind)
@@ -56,11 +59,16 @@ ggCaterpillar <- function(re, QQ=FALSE, likeDotplot=TRUE, detailedFacetLabs = TR
 }
 
 # Analysis function
-modelanalysis <- function(complexity_or_beauty, model1, model2, model3, vif, model4)  {
-  # complexity_or_beauty - 1 for complexity, 2 for beauty
-
-  # if more than 2 variables, print variation inflation factors
-  if (!missing(vif))
+modelanalysis <- function(complexity_or_beauty, model1, model2, model3, vif, model4) {
+  # This function performs all analyses on the model and prints all performance metrics
+  # Arguements:
+  # complexity_or_beauty: integer: 1 for complexity, 2 for beauty
+  # model1, model2, model3 - lmer models on 3 folds
+  # vif - integer - indicates if variance inflation factors need to be printed.
+  # model4 - lmer model used for plots (in our case that's the model from fold 1). Can be None if graphs are not plotted.
+  # if more than 2 variables, print variance inflation factors (VIFs)
+  
+  if (!missing(vif))    # VIFs printed first if vif set to 1
   {
     tryCatch(
       {
@@ -76,31 +84,122 @@ modelanalysis <- function(complexity_or_beauty, model1, model2, model3, vif, mod
   }
 
   # AIC
-  print(noquote(paste("Mean AIC =", (AIC(model1) + AIC(model2) + AIC(model3))/3)))
+  # print AIC of each fold and average AIC
+  # Uncomment next 3 lines to print AIC of each fold
+  # print(noquote(paste("AIC1 =", AIC(model1))))
+  # print(noquote(paste("AIC2 =", AIC(model2))))
+  # print(noquote(paste("AIC3 =", AIC(model3))))
+  meanAIC = (AIC(model1) + AIC(model2) + AIC(model3))/3
+  print(noquote(paste("Mean AIC =", meanAIC)))
   
   # BIC
-  print(noquote(paste("Mean BIC =", (BIC(model1) + BIC(model2) + BIC(model3))/3)))
+  # print BIC of each fold and average BIC
+  # Uncomment next 3 lines to print BIC of each fold
+  # print(noquote(paste("BIC1 =", BIC(model1))))
+  # print(noquote(paste("BIC2 =", BIC(model2))))
+  # print(noquote(paste("BIC3 =", BIC(model3))))
+  meanBIC = (BIC(model1) + BIC(model2) + BIC(model3))/3
+  print(noquote(paste("Mean BIC =", meanBIC)))
 
-  # R^2 test and RMSEs
+  # print variance in AIC/BIC values - the variance would be same since BIC = AIC + k
+  varAICBIC = var(c(BIC(model1), BIC(model2), BIC(model3)))
+  print(noquote(paste("Var AIC, BIC =", varAICBIC)))
+
+  # print mean and variance in R^2 and RMSEs for both train and test data for complexity models
   if (complexity_or_beauty == 1)
   {
-    print(noquote(paste("Mean R^2 test =", (cor(predict(model1, data_test_fold1), data_test_fold1$complexity_rating) ^ 2 + cor(predict(model2, data_test_fold2), data_test_fold2$complexity_rating) ^ 2 + cor(predict(model3, data_test_fold3), data_test_fold3$complexity_rating) ^ 2)/3) ))
-    print(noquote(paste("Mean train RMSE =",( sqrt(mean(residuals(model1)^2)) + sqrt(mean(residuals(model2)^2)) + sqrt(mean(residuals(model3)^2)))/3))) # nolint
-    print(noquote(paste("Mean test RMSE =", ( sqrt(mean((predict(model1, data_test_fold1) - data_test_fold1$complexity_rating)^2)) + sqrt(mean((predict(model2, data_test_fold2) - data_test_fold2$complexity_rating)^2)) + sqrt(mean((predict(model3, data_test_fold3) - data_test_fold3$complexity_rating)^2)) ) / 3 ) ))
+    meanrsqtrain = (cor(predict(model1, data_train_fold1), data_train_fold1$complexity_rating) ^ 2 + 
+                    cor(predict(model2, data_train_fold2), data_train_fold2$complexity_rating) ^ 2 + 
+                    cor(predict(model3, data_train_fold3), data_train_fold3$complexity_rating) ^ 2)/3
+    print(noquote(paste("Mean R^2 train =", meanrsqtrain)))
+
+    varrsqtrain = var(c(cor(predict(model1, data_train_fold1), data_train_fold1$complexity_rating) ^ 2, 
+                  cor(predict(model2, data_train_fold2), data_train_fold2$complexity_rating) ^ 2, 
+                  cor(predict(model3, data_train_fold3), data_train_fold3$complexity_rating) ^ 2))
+    print(noquote(paste("Var R^2 train =", varrsqtrain)))
+    
+    meanrsqtest = (cor(predict(model1, data_test_fold1), data_test_fold1$complexity_rating) ^ 2 + 
+                  cor(predict(model2, data_test_fold2), data_test_fold2$complexity_rating) ^ 2 + 
+                  cor(predict(model3, data_test_fold3), data_test_fold3$complexity_rating) ^ 2)/3
+    print(noquote(paste("Mean R^2 test =", meanrsqtest)))
+    
+    varrsqtest = var(c(cor(predict(model1, data_test_fold1), data_test_fold1$complexity_rating) ^ 2, 
+                  cor(predict(model2, data_test_fold2), data_test_fold2$complexity_rating) ^ 2, 
+                  cor(predict(model3, data_test_fold3), data_test_fold3$complexity_rating) ^ 2))
+    print(noquote(paste("Var R^2 test =", varrsqtest)))
+
+    meanRMSEtrain = (sqrt(mean(residuals(model1)^2)) + 
+                    sqrt(mean(residuals(model2)^2)) + 
+                    sqrt(mean(residuals(model3)^2)))/3
+    print(noquote(paste("Mean train RMSE =", meanRMSEtrain)))
+
+    varRMSEtrain = var(c(sqrt(mean(residuals(model1)^2)), 
+                   sqrt(mean(residuals(model2)^2)), 
+                   sqrt(mean(residuals(model3)^2))))
+    print(noquote(paste("Var train RMSE =", varRMSEtrain)))
+
+    meanRMSEtest = (sqrt(mean((predict(model1, data_test_fold1) - data_test_fold1$complexity_rating)^2)) + 
+                   sqrt(mean((predict(model2, data_test_fold2) - data_test_fold2$complexity_rating)^2)) + 
+                   sqrt(mean((predict(model3, data_test_fold3) - data_test_fold3$complexity_rating)^2)))/3
+    print(noquote(paste("Mean test RMSE =", meanRMSEtest)))
+    
+    varRMSEtest = var(c(sqrt(mean((predict(model1, data_test_fold1) - data_test_fold1$complexity_rating)^2)), 
+                  sqrt(mean((predict(model2, data_test_fold2) - data_test_fold2$complexity_rating)^2)), 
+                  sqrt(mean((predict(model3, data_test_fold3) - data_test_fold3$complexity_rating)^2))))
+    print(noquote(paste("Var test RMSE =", varRMSEtest)))
   }
 
+  # print mean and variance in R^2 and RMSEs for both train and test data for beauty models
   else if (complexity_or_beauty == 2)
   {
-    print(noquote(paste("Mean R^2 test =", (cor(predict(model1, data_test_fold1), data_test_fold1$beauty_rating) ^ 2 + cor(predict(model2, data_test_fold2), data_test_fold2$beauty_rating) ^ 2 + cor(predict(model3, data_test_fold3), data_test_fold3$beauty_rating) ^ 2)/3) ))
-    print(noquote(paste("Mean train RMSE =",( sqrt(mean(residuals(model1)^2)) + sqrt(mean(residuals(model2)^2)) + sqrt(mean(residuals(model3)^2)))/3))) # nolint
-    print(noquote(paste("Mean test RMSE =", ( sqrt(mean((predict(model1, data_test_fold1) - data_test_fold1$beauty_rating)^2)) + sqrt(mean((predict(model2, data_test_fold2) - data_test_fold2$beauty_rating)^2)) + sqrt(mean((predict(model3, data_test_fold3) - data_test_fold3$beauty_rating)^2)) ) / 3 ) ))
+    meanrsqtrain = (cor(predict(model1, data_train_fold1), data_train_fold1$beauty_rating) ^ 2 + 
+                    cor(predict(model2, data_train_fold2), data_train_fold2$beauty_rating) ^ 2 + 
+                    cor(predict(model3, data_train_fold3), data_train_fold3$beauty_rating) ^ 2)/3
+    print(noquote(paste("Mean R^2 train =", meanrsqtrain)))
+
+    varrsqtrain = var(c(cor(predict(model1, data_train_fold1), data_train_fold1$beauty_rating) ^ 2, 
+                  cor(predict(model2, data_train_fold2), data_train_fold2$beauty_rating) ^ 2, 
+                  cor(predict(model3, data_train_fold3), data_train_fold3$beauty_rating) ^ 2))
+    print(noquote(paste("Var R^2 train =", varrsqtrain)))
+    
+    meanrsqtest = (cor(predict(model1, data_test_fold1), data_test_fold1$beauty_rating) ^ 2 + 
+                  cor(predict(model2, data_test_fold2), data_test_fold2$beauty_rating) ^ 2 + 
+                  cor(predict(model3, data_test_fold3), data_test_fold3$beauty_rating) ^ 2)/3
+    print(noquote(paste("Mean R^2 test =", meanrsqtest)))
+    
+    varrsqtest = var(c(cor(predict(model1, data_test_fold1), data_test_fold1$beauty_rating) ^ 2, 
+                  cor(predict(model2, data_test_fold2), data_test_fold2$beauty_rating) ^ 2, 
+                  cor(predict(model3, data_test_fold3), data_test_fold3$beauty_rating) ^ 2))
+    print(noquote(paste("Var R^2 test =", varrsqtest)))
+
+    meanRMSEtrain = (sqrt(mean(residuals(model1)^2)) + 
+                    sqrt(mean(residuals(model2)^2)) + 
+                    sqrt(mean(residuals(model3)^2)))/3
+    print(noquote(paste("Mean train RMSE =", meanRMSEtrain)))
+
+    varRMSEtrain = var(c(sqrt(mean(residuals(model1)^2)), 
+                   sqrt(mean(residuals(model2)^2)), 
+                   sqrt(mean(residuals(model3)^2))))
+    print(noquote(paste("Var train RMSE =", varRMSEtrain)))
+
+    meanRMSEtest = (sqrt(mean((predict(model1, data_test_fold1) - data_test_fold1$beauty_rating)^2)) + 
+                   sqrt(mean((predict(model2, data_test_fold2) - data_test_fold2$beauty_rating)^2)) + 
+                   sqrt(mean((predict(model3, data_test_fold3) - data_test_fold3$beauty_rating)^2)))/3
+    print(noquote(paste("Mean test RMSE =", meanRMSEtest)))
+    
+    varRMSEtest = var(c(sqrt(mean((predict(model1, data_test_fold1) - data_test_fold1$beauty_rating)^2)), 
+                  sqrt(mean((predict(model2, data_test_fold2) - data_test_fold2$beauty_rating)^2)), 
+                  sqrt(mean((predict(model3, data_test_fold3) - data_test_fold3$beauty_rating)^2))))
+    print(noquote(paste("Var test RMSE =", varRMSEtest)))
   }
 
-  # Plot
+  # Make plot if model4 provided
   if(!missing(model4))
   {
     if (complexity_or_beauty == 1)
     {
+      # Save plot of complexity ratings vs predictions (on both train and test data)
+
       pdf(file="plots/complexity_train.pdf", width = 10, height = 10, family = "Times")
       par(mar=c(5,6,4,1)+.1)
       p1 <- plot(predict(model4, data_train_fold1), data_train_fold1$complexity_rating, xlab="Predictions on training data", ylab="Complexity ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes=F)      
@@ -126,6 +225,8 @@ modelanalysis <- function(complexity_or_beauty, model1, model2, model3, vif, mod
 
     else if (complexity_or_beauty == 2)
     {
+      # Save plot of beauty ratings vs predictions (on both train and test data)
+
       pdf(file="plots/beauty_train.pdf", width = 10, height = 10, family = "Times")
       par(mar=c(5,6,4,1)+.1)
       p1 <- plot(predict(model4, data_train_fold1), data_train_fold1$beauty_rating, xlab="Predictions on training data", ylab="Beauty ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes=F)
@@ -149,58 +250,99 @@ modelanalysis <- function(complexity_or_beauty, model1, model2, model3, vif, mod
       dev.off()
     }
   }
+
+  metrics1 = c(meanAIC, meanBIC, varAICBIC)
+  metrics1 = round(metrics1, digits = 1)
+  metrics2 = c(meanrsqtrain, varrsqtrain, meanrsqtest, varrsqtest, meanRMSEtrain, varRMSEtrain, meanRMSEtest, varRMSEtest)
+  metrics2 = signif(metrics2, digits = 2)
+  
+  return(c(metrics1, metrics2))
+}
+
+plot_model <- function(model, path) {
+  # Convert data to data frames
+  train_df <- data.frame(predictions = predict(model, data_train_fold1), complexity_rating = data_train_fold1$complexity_rating)
+  test_df <- data.frame(predictions = predict(model, data_test_fold1), complexity_rating = data_test_fold1$complexity_rating)
+
+  # Create the plot with training and test data
+  # Create the plot with training and test data
+  ggplot(mapping = aes(x = predictions, y = complexity_rating)) +
+    geom_point(data = train_df, aes(color = "Training"), alpha = 0.5, size = 4) +
+    geom_point(data = test_df, aes(color = "Test"), alpha = 0.5, size = 4) +
+    geom_abline(intercept = 0, slope = 1, color = "black", linetype = 2, size = 3) +
+    xlab("Predictions") +
+    ylab("Complexity ratings") +
+    theme_classic() +
+    theme(axis.title = element_text(family = "serif", size = 32),
+          axis.text = element_text(family = "serif", size = 25),
+          legend.position = "top",
+          legend.title = element_text(family = "serif", size = 28),
+          legend.text = element_text(family = "serif", size = 28)) +
+    # scale_color_manual(name = "", values = c("Training" = "darkblue", "Test" = "cyan2"))
+    # scale_color_manual(name = "", values = c("Training" = "darkgreen", "Test" = "darkolivegreen2"))
+    scale_color_manual(name = "", values = c("Training" = "darkred", "Test" = "darksalmon"))
+  # Save the plot to a PDF file
+  ggsave(paste("plots/", path), width = 10, height = 10)
 }
 
 # Setup
 {
-# Read data
-data <- read.csv("utils/stat_analysis.csv")
+  # Read data
+  data <- read.csv("utils/stat_analysis.csv")
 
-# Remove people who failed all attention checks
-all_attemntion_failed <- c('ls1hg9ya', 'jjs7ytws')
-data <- data[! data$subject %in% all_attemntion_failed,]
+  # Remove people who failed all attention checks
+  all_attemntion_failed <- c('ls1hg9ya', 'jjs7ytws')
+  data <- data[! data$subject %in% all_attemntion_failed,]
 
-# Scale data
-my_scale<-function(x){as.numeric(scale(x))}
-data$rtime <- data$rtime/1000
-data$subject <- factor(data$subject)
-data$set <- factor(data$set, levels = c(1,2,3,4))
-data$pattern <- factor(data$pattern)
-data$trial <- my_scale(data$trial)
-data$complexity_rating <- my_scale(data$complexity_rating)
-data$previous_complexity_rating <- my_scale(data$previous_complexity_rating)
-data$complexity_rating_sq <- data$complexity_rating^2
-data$beauty_rating <- my_scale(data$beauty_rating)
-data$previous_beauty_rating <- my_scale(data$previous_beauty_rating)
-data$SC <- my_scale(data$SC)
-data$SCsq <- data$SC^2
-data$intricacy_4 <- my_scale(data$intricacy_4)
-data$intricacy_8 <- my_scale(data$intricacy_8)
-data$intricacy_4sq <- data$intricacy_4^2
-data$intricacy_8sq <- data$intricacy_8^2
-data$quadtree <- my_scale(data$quadtree)
-data$local_asymm <- my_scale(data$local_asymm)
-data$Hasymm <- my_scale(data$Hasymm)
-data$Vasymm <- my_scale(data$Vasymm)
-data$asymm <- (data$local_asymm + data$Hasymm + data$Vasymm)/3
-data$entropy <- my_scale(data$entropy)
-data$density <- my_scale(data$density)
-data$neighbourhood_size <- factor(data$neighbourhood_size)
-data$tot_outertot <- factor(data$tot_outertot)
-data$IC <- factor(data$IC)
-data$num_active_rules <- my_scale(data$num_active_rules)
+  # Scale all variables in the data
+  my_scale <- function(x){as.numeric(scale(x))}
+
+  data$rtime <- data$rtime/1000
+  data$subject <- factor(data$subject)
+  data$set <- factor(data$set, levels = c(1,2,3,4))
+  data$pattern <- factor(data$pattern)
+  data$trial <- my_scale(data$trial)
+  data$complexity_rating <- my_scale(data$complexity_rating)
+  data$previous_complexity_rating <- my_scale(data$previous_complexity_rating)
+  data$complexity_rating_sq <- my_scale(data$complexity_rating^2)
+  data$beauty_rating <- my_scale(data$beauty_rating)
+  data$previous_beauty_rating <- my_scale(data$previous_beauty_rating)
+  data$LSCsq <- my_scale(data$LSC^2)
+  data$LSC <- my_scale(data$LSC)
+  data$intricacy_4sq <- my_scale(data$intricacy_4^2)
+  data$intricacy_8sq <- my_scale(data$intricacy_8^2)
+  data$intricacy_4 <- my_scale(data$intricacy_4)
+  data$intricacy_8 <- my_scale(data$intricacy_8)
+  data$quadtree <- my_scale(data$quadtree)
+  data$local_asymm <- my_scale(data$local_asymm)
+  data$Hasymm <- my_scale(data$Hasymm)
+  data$Vasymm <- my_scale(data$Vasymm)
+  data$asymm <- my_scale((data$local_asymm + data$Hasymm + data$Vasymm)/3)
+  data$entropy <- my_scale(data$entropy)
+  data$mean_entropy <- my_scale(data$mean_entropy)
+  data$entropy_of_means <- my_scale(data$entropy_of_means)
+  data$densitysq <- my_scale(data$density^2)
+  data$density <- my_scale(data$density)
+  data$neighbourhood_size <- factor(data$neighbourhood_size)
+  data$tot_outertot <- factor(data$tot_outertot)
+  data$IC <- factor(data$IC)
+  data$num_active_rules <- my_scale(data$num_active_rules)
 }
 
 # Stratified data sampling to create 3 folds
 {
+  # Create fold 1
   data_test_fold1 <- data %>% group_by(subject) %>% sample_n(size=20)
   data_train_fold1 <- setdiff(data, data_test_fold1)
 
+  # Subtract all data from fold 1 to get fold 2 and 3
   data_test_fold23 <- setdiff(data, data_test_fold1)
 
+  # Create fold 2
   data_test_fold2 <- data_test_fold23 %>% group_by(subject) %>% sample_n(size=20)
   data_train_fold2 <- setdiff(data, data_test_fold2)
 
+  # Create fold 3
   data_test_fold3 <- setdiff(data_test_fold23, data_test_fold2)
   data_train_fold3 <- setdiff(data, data_test_fold3)
 }
@@ -208,66 +350,110 @@ data$num_active_rules <- my_scale(data$num_active_rules)
 # View data
 View(data)
 
+# Notes: 
+# participant in paper is subject here.
+# intricacy from paper is intricacy_4 here.
+
 ############### COMPLEXITY MODELS ##############
 
-# List of all models of complexity
-formulae_complexity <- list("1 + (1 | subject)",
+# List of complexity models reported in the paper
+models_in_paper_complexity <- list("1 + (1 | subject)",
           "1 + (1 | subject) + (1 | set)",
-          "SC + (1 | subject)",
-          "quadtree + (1 | subject)",
-          "quadtree + (quadtree | subject)",
-          "SC + (SC | subject)",
+          "LSC + (1 | subject)",
+          "LSC + (LSC | subject)",
           "KC + (1 | subject)",
-          "intricacy_4 + (1 | subject)",
-          "intricacy_8 + (1 | subject)",
-          "SC + asymm + (1 | subject)",
-          "SC + entropy + (1 | subject)",
-          "SC + density + (1 | subject)",
-          "SC + entropy + density + (1 | subject)",
-          "SC + intricacy_4 + (1 | subject)",
-          "SC + intricacy_8 + (1 | subject)",
-          "SC + intricacy_4 + intricacy_8 + (1 | subject)",
-          "SC + quadtree + (1 | subject)",
-          "SC + intricacy_4 + SC:intricacy_4 + (1 | subject)",
-          "SC + intricacy_4 + (SC | subject)",
-          "SC + intricacy_4 + (intricacy_4 | subject)",
-          "SC * intricacy_4 + (intricacy_4 | subject)",
-          "quadtree + intricacy_4 + (1 | subject)",
-          "quadtree + intricacy_4 + (quadtree | subject)",
-          "quadtree + intricacy_4 + (intricacy_4 | subject)",
-          "SCsq + intricacy_4sq + (1 | subject)",
-          "SC + SCsq + intricacy_4 + intricacy_4sq + (1 | subject)",
-          "SC + intricacy_4 + tot_outertot + (1 | subject)",
-          "neighbourhood_size + tot_outertot + IC + (1 | subject)",
-          "trial + (1 | subject)",
-          "SC + intricacy_4 + trial + (intricacy_4 | subject)",
-          "previous_complexity_rating + (trial | subject)",
-          "SC + intricacy_4 + previous_complexity_rating + (intricacy_4 | subject)"
+          "LSC + density + (1 | subject)",
+          "LSC + entropy + (1 | subject)",
+          "LSC + mean_entropy + (1 | subject)",
+          "LSC + entropy_of_means + (1 | subject)",
+          "LSC + asymm + (1 | subject)",
+          "LSC + intricacy_4 + (1 | subject)",
+          "LSC * intricacy_4 + (1 | subject)",
+          "LSC + intricacy_4 + (LSC | subject)",
+          "LSC + intricacy_4 + (intricacy_4 | subject)",
+          "LSC + intricacy_4 + ((LSC + intricacy_4) | subject)",
+          "LSC * intricacy_4 + ((LSC + intricacy_4) | subject)",
+          "LSCsq + intricacy_4sq + (1 | subject)",
+          "LSC + LSCsq + intricacy_4 + intricacy_4sq + (1 | subject)"
           )
 
-# Analyze each model - Table 1
-for (formula in formulae_complexity) {
-  fullformula = paste("complexity_rating ~", formula)
-  f1 = lmer(fullformula, data = data_train_fold1)
-  f2 = lmer(fullformula, data = data_train_fold2)
-  f3 = lmer(fullformula, data = data_train_fold3)
-  # Can also print summaries if desired
-  # print(summary(f1))
-  # print(summary(f2))
-  # print(summary(f3))
-  print(noquote(fullformula))
-  modelanalysis(1, f1, f2, f3, 1)
+# List of all models of complexity
+all_models_complexity <- list("1 + (1 | subject)",
+          "1 + (1 | subject) + (1 | set)",
+          "density + (1 | subject)",
+          "entropy + (1 | subject)",
+          "mean_entropy + (1 | subject)",
+          "entropy_of_means + (1 | subject)",
+          "LSC + (1 | subject)",
+          "KC + (1 | subject)",
+          "asymm + (1 | subject)",
+          "intricacy_4 + (1 | subject)",
+          "intricacy_8 + (1 | subject)",
+          "quadtree + (1 | subject)",
+          "LSC + density + (1 | subject)",
+          "LSC + entropy + (1 | subject)",
+          "LSC + mean_entropy + (1 | subject)",
+          "LSC + entropy_of_means + (1 | subject)",
+          "LSC + asymm + (1 | subject)",
+          "LSC + intricacy_4 + (1 | subject)",
+          "LSC + intricacy_8 + (1 | subject)",
+          "LSC + quadtree + (1 | subject)",
+          "LSC + intricacy_4 + intricacy_8 + (1 | subject)",
+          "LSC + entropy_of_means + density + (1 | subject)",
+          "LSC + intricacy_4 + LSC:intricacy_4 + (1 | subject)",
+          "LSC + intricacy_4 + (LSC | subject)",
+          "LSC + intricacy_4 + (intricacy_4 | subject)",
+          "LSC + intricacy_4 + ((LSC + intricacy_4) | subject)",
+          "LSC * intricacy_4 + ((LSC + intricacy_4) | subject)",
+          "quadtree + intricacy_4 + (1 | subject)",
+          "quadtree + intricacy_4 + (quadtree | subject)",
+          "quadtree + intricacy_4 + ((intricacy_4 + intricacy_4) | subject)",
+          "LSCsq + intricacy_4sq + (1 | subject)",
+          "LSC + LSCsq + intricacy_4 + intricacy_4sq + (1 | subject)",
+          "neighbourhood_size + tot_outertot + IC + (1 | subject)",
+          "trial + (1 | subject)",
+          "LSC + intricacy_4 + trial + ((LSC + intricacy_4) | subject)",
+          "previous_complexity_rating + (trial | subject)",
+          "LSC + intricacy_4 + previous_complexity_rating + ((LSC + intricacy_4) | subject)"
+          )
+
+# Analyze a subset of the complexity models - Table 1
+{
+  df = data.frame(matrix(ncol=13,nrow=0, dimnames=list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var", "Rsq train mean", "Rsq train var", "Rsq test mean", "Rsq test var", "RMSE train mean", "RMSE train var", "RMSE test mean", "RMSE test var"))))
+
+  id = 0
+  for (formula in all_models_complexity) {    # can also run for all_models instead (replace models_in_paper_complexity by all_models_complexity)
+    id = id + 1
+    fullformula = paste("complexity_rating ~", formula)
+    # f1 = lmer(fullformula, data = data_train_fold1, control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8, optimizer="bobyqa")))
+    # f2 = lmer(fullformula, data = data_train_fold2, control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8, optimizer="bobyqa")))
+    # f3 = lmer(fullformula, data = data_train_fold3, control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8, optimizer="bobyqa")))
+    f1 = lmer(fullformula, data = data_train_fold1, control=lmerControl(optimizer="bobyqa"))
+    f2 = lmer(fullformula, data = data_train_fold2, control=lmerControl(optimizer="bobyqa"))
+    f3 = lmer(fullformula, data = data_train_fold3, control=lmerControl(optimizer="bobyqa"))
+    # Uncomment next 3 lines to print summaries
+    # print(summary(f1))
+    # print(summary(f2))
+    # print(summary(f3))
+    print(noquote(fullformula))
+
+    rowparts = modelanalysis(1, f1, f2, f3, 1)
+    df[nrow(df) + 1, ] = c(id, noquote(fullformula), rowparts)
+  }
+
+  View(df)
+  write.csv(df, "model_fits/models_complexity.csv", row.names=FALSE)
 }
 
-# Make plots for best model
-# Figure 6 and Figure AIII.5(a)
+# Print performance of best model and make plots
+# Figure 7
 {
-  bestformula = "SC + intricacy_4 + (intricacy_4 | subject)"
+  bestformula = "LSC + intricacy_4 + ((LSC + intricacy_4) | subject)"
   bestfullformula = paste("complexity_rating ~", bestformula)
-  f1 = lmer(bestfullformula, data = data_train_fold1)
-  f2 = lmer(bestfullformula, data = data_train_fold2)
-  f3 = lmer(bestfullformula, data = data_train_fold3)
-  f = lmer(bestfullformula, data = data_train_fold1)
+  f1 = lmer(bestfullformula, data = data_train_fold1, control=lmerControl(optimizer="bobyqa"))
+  f2 = lmer(bestfullformula, data = data_train_fold2, control=lmerControl(optimizer="bobyqa"))
+  f3 = lmer(bestfullformula, data = data_train_fold3, control=lmerControl(optimizer="bobyqa"))
+  f = lmer(bestfullformula, data = data_train_fold1, control=lmerControl(optimizer="bobyqa"))
   
   # Plots data vs predictions on train and test data - Figure 66
   modelanalysis(1, f1, f2, f3, 1, f)
@@ -277,40 +463,85 @@ for (formula in formulae_complexity) {
   ggsave("plots/random_effects_complexity.pdf")
 }
 
+# Make plots for only LSC and only intricacy - Figure AIII.2
+{
+  formula_LSC = "LSC + (1 | subject)"
+  fullformula_LSC = paste("complexity_rating ~", formula_LSC)
+  model_LSC = lmer(fullformula_LSC, data = data_train_fold1)
+  plot_model(model_LSC, "complexity_train_test_LSC.pdf")
+
+  formula_intricacy = "intricacy_4 + (1 | subject)"
+  fullformula_intricacy = paste("complexity_rating ~", formula_intricacy)
+  model_intricacy = lmer(fullformula_intricacy, data = data_train_fold1)
+  plot_model(model_intricacy, "complexity_train_test_intricacy.pdf")
+
+  formula_both = "LSC + intricacy_4 + (1 | subject)"
+  fullformula_both = paste("complexity_rating ~", formula_both)
+  model_both = lmer(fullformula_both, data = data_train_fold1)
+  plot_model(model_both, "complexity_train_test_both.pdf")
+}
+
+# Print fixed effects
+{
+  fixef(f)
+}
+
+# Print random effects
+{
+  ranef(f)
+}
+
 # Write objective complexity column onto data for mediation analysis
 {
-  data$obj_comp <- (fixef(f)["SC"] * data$SC) + (fixef(f)["intricacy_4"] * data$intricacy_4) + fixef(f)["(Intercept)"]
+  data$obj_comp <- (fixef(f)["LSC"] * data$LSC) + (fixef(f)["intricacy_4"] * data$intricacy_4) + fixef(f)["(Intercept)"]
   ranef <- ranef(f)
   raneflist1 <- ranef$subject[,"(Intercept)"]
-  raneflist2 <- ranef$subject[,"intricacy_4"]
+  raneflist2 <- ranef$subject[,"LSC"]
+  raneflist3 <- ranef$subject[,"intricacy_4"]
   data$randint <- rep(raneflist1, each=60)
-  data$randslope <- rep(raneflist2, each=60)
+  data$randslope_LSC <- rep(raneflist2, each=60)
+  data$randslope_intricacy <- rep(raneflist3, each=60)
   data$obj_comp_withrandint <- data$obj_comp + data$randint
-  data$obj_comp_withrandint_withrandslope <- (fixef(f)["SC"] * data$SC) + ((fixef(f)["intricacy_4"] + data$randslope) * data$intricacy_4) + fixef(f)["(Intercept)"] + data$randint
+  data$obj_comp_withrandint_withrandslopes <- ((fixef(f)["LSC"] + data$randslope_LSC) * data$LSC) + ((fixef(f)["intricacy_4"] + data$randslope_intricacy) * data$intricacy_4) + fixef(f)["(Intercept)"] + data$randint
 }
 
 # Get pattern numbers with maximum and minimum discrepency
 {
-  data$discrepancy <- my_scale(data$obj_comp_withrandint_withrandslope - data$complexity_rating)
+  data$discrepancy <- my_scale(data$obj_comp_withrandint_withrandslopes - data$complexity_rating)
   mean_pattern <- aggregate(data, list(data$pattern), mean)
   inc_disc <- mean_pattern[order(mean_pattern$discrepancy), ]
-  print(head(inc_disc, 7)$Group.1)
-  print(tail(inc_disc, 7)$Group.1)
+  print(tail(inc_disc, 10)$Group.1) # overestimation of complexity
+  print(head(inc_disc, 8)$Group.1) # underestimation of complexity
 }
 
 ############### BEAUTY MODELS ###############
 
 # Create the disorder variable and recreate the folds
 {
-  formula = "complexity_rating + asymm + entropy + (asymm | subject)"
+  formula = "complexity_rating + asymm + entropy + (1 | subject)"
   fullformula = paste("beauty_rating ~", formula)
   f1 = lmer(fullformula, data = data_train_fold1)
   f2 = lmer(fullformula, data = data_train_fold2)
   f3 = lmer(fullformula, data = data_train_fold3)
   f = lmer(fullformula, data = data_train_fold1)
-
   # add disorder to data
-  data$disorder <- my_scale((abs(fixef(f)["asymm"]) * data$asymm) + (abs(fixef(f)["entropy"]) * data$entropy))
+  data$disorder_1 <- my_scale((abs(fixef(f)["asymm"]) * data$asymm) + (abs(fixef(f)["entropy"]) * data$entropy))
+
+  formula = "complexity_rating + asymm + mean_entropy + (1 | subject)"
+  fullformula = paste("beauty_rating ~", formula)
+  f1 = lmer(fullformula, data = data_train_fold1)
+  f2 = lmer(fullformula, data = data_train_fold2)
+  f3 = lmer(fullformula, data = data_train_fold3)
+  f = lmer(fullformula, data = data_train_fold1)
+  data$disorder_2 <- my_scale((abs(fixef(f)["asymm"]) * data$asymm) + (abs(fixef(f)["mean_entropy"]) * data$mean_entropy))
+
+  formula = "complexity_rating + asymm + entropy_of_means + (1 | subject)"
+  fullformula = paste("beauty_rating ~", formula)
+  f1 = lmer(fullformula, data = data_train_fold1)
+  f2 = lmer(fullformula, data = data_train_fold2)
+  f3 = lmer(fullformula, data = data_train_fold3)
+  f = lmer(fullformula, data = data_train_fold1)
+  data$disorder <- my_scale((abs(fixef(f)["asymm"]) * data$asymm) + (abs(fixef(f)["entropy_of_means"]) * data$entropy_of_means))
 
   # recreate the folds
   data_test_fold1 <- data %>%
@@ -329,8 +560,20 @@ for (formula in formulae_complexity) {
   data_train_fold3 <- setdiff(data, data_test_fold3)
 }
 
+# List of beauty models reported in the paper
+models_in_paper_beauty <- list("complexity_rating + (1 | subject)",
+          "complexity_rating + disorder + (1 | subject)",
+          "complexity_rating + disorder + (disorder | subject)",
+          "complexity_rating * disorder + (disorder | subject)",
+          "complexity_rating_sq + disorder + (1 | subject)",
+          "complexity_rating + complexity_rating_sq + disorder + (1 | subject)",
+          "LSC + intricacy_4 + disorder + (1 | subject)",
+          "LSC + intricacy_4 + disorder + (disorder | subject)",
+          "(LSC + intricacy_4) * disorder + (disorder | subject)"
+          )
+
 # List of all models of beauty
-formulae_beauty <- list("complexity_rating + (1 | subject)",
+all_models_beauty <- list("complexity_rating + (1 | subject)",
           "complexity_rating + asymm + entropy + (1 | subject)",
           "complexity_rating + asymm + entropy + (complexity_rating | subject)",
           "complexity_rating + asymm + entropy + (asymm | subject)",
@@ -338,12 +581,14 @@ formulae_beauty <- list("complexity_rating + (1 | subject)",
           "complexity_rating + disorder + (1 | subject)",
           "complexity_rating + disorder + (disorder | subject)",
           "complexity_rating * disorder + (disorder | subject)",
+          "complexity_rating * disorder_1 + (disorder_1 | subject)",
+          "complexity_rating * disorder_2 + (disorder_2 | subject)",
           "complexity_rating_sq + disorder + (1 | subject)",
           "complexity_rating + complexity_rating_sq + disorder + (1 | subject)",
-          "SC + intricacy_4 + asymm + entropy + (1 | subject)",
-          "SC + intricacy_4 + disorder + (1 | subject)",
-          "SC + intricacy_4 + disorder + (disorder | subject)",
-          "SC + intricacy_4 + disorder + (SC + intricacy_4):disorder + (disorder | subject)",
+          "LSC + intricacy_4 + asymm + entropy + (1 | subject)",
+          "LSC + intricacy_4 + disorder + (1 | subject)",
+          "LSC + intricacy_4 + disorder + (disorder | subject)",
+          "LSC + intricacy_4 + disorder + (LSC + intricacy_4):disorder + (disorder | subject)",
           "trial + (1 | subject)",
           "complexity_rating * disorder + trial + (disorder | subject)",
           "previous_beauty_rating + (trial | subject)",
@@ -351,18 +596,28 @@ formulae_beauty <- list("complexity_rating + (1 | subject)",
           "complexity_rating * trial + (1 | subject)"
           )
 
-# Analyze each model - Table 2
-for (formula in formulae_beauty) {
-  fullformula = paste("beauty_rating ~", formula)
-  f1 = lmer(fullformula, data = data_train_fold1)
-  f2 = lmer(fullformula, data = data_train_fold2)
-  f3 = lmer(fullformula, data = data_train_fold3)
-  # Can also print summaries if desired
-  # print(summary(f1))
-  # print(summary(f2))
-  # print(summary(f3))
-  print(noquote(fullformula))
-  modelanalysis(2, f1, f2, f3, 1)
+{
+  df = data.frame(matrix(ncol=13,nrow=0, dimnames=list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var", "Rsq train mean", "Rsq train var", "Rsq test mean", "Rsq test var", "RMSE train mean", "RMSE train var", "RMSE test mean", "RMSE test var"))))
+
+  id = 0
+  # Analyze a subset of the beauty models - Table 2
+  for (formula in all_models_beauty) {   # can also run for all_models instead (replace models_in_paper_beauty by all_models_beauty)
+    id = id + 1
+    fullformula = paste("beauty_rating ~", formula)
+    f1 = lmer(fullformula, data = data_train_fold1, control=lmerControl(optimizer="bobyqa"))
+    f2 = lmer(fullformula, data = data_train_fold2, control=lmerControl(optimizer="bobyqa"))
+    f3 = lmer(fullformula, data = data_train_fold3, control=lmerControl(optimizer="bobyqa"))
+    # Uncomment the next 3 lines to print summaries
+    # print(summary(f1))
+    # print(summary(f2))
+    # print(summary(f3))
+    print(noquote(fullformula))
+    rowparts = modelanalysis(2, f1, f2, f3, 1)
+    df[nrow(df) + 1, ] = c(id, noquote(fullformula), c(rowparts))
+  }
+
+  View(df)
+  write.csv(df, "model_fits/models_beauty.csv", row.names=FALSE)
 }
 
 # Make plots for best model
@@ -383,8 +638,16 @@ for (formula in formulae_beauty) {
   ggsave("plots/random_effects_beauty.pdf")
 }
 
+{
+  fixef(f)
+}
+
+{
+  ranef(f)
+}
+
 # Create interaction plot
-# Figure 7
+# Figure 10
 {
   pdf(file="plots/complexity_order_interaction_for_beauty.pdf", width = 10, height = 10)
   par(mar=c(5,6,4,1)+.1)
@@ -412,25 +675,37 @@ for (formula in formulae_beauty) {
 
   mean_pattern <- aggregate(data, list(data$pattern), mean)
   mean_pattern_bydisorder <- mean_pattern[order(-mean_pattern$disorder), ]
+
+  highest_disorder <- mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin >= 8,]
   # max disorder patterns: 120, 109, 58
+  
+  mean_pattern_highdisorder_bycomplexity <- highest_disorder[order(highest_disorder$complexity_rating),]
+  
+  print(head(mean_pattern_highdisorder_bycomplexity, 3)$Group.1) # high disorder, low CR
+  cat(mean_pattern_highdisorder_bycomplexity[round(nrow(mean_pattern_highdisorder_bycomplexity)/2) - 1,]$Group.1, mean_pattern_highdisorder_bycomplexity[round(nrow(mean_pattern_highdisorder_bycomplexity)/2),]$Group.1, mean_pattern_highdisorder_bycomplexity[round(nrow(mean_pattern_highdisorder_bycomplexity)/2) + 1,]$Group.1) # low disorder, medium CR
+  print(tail(mean_pattern_highdisorder_bycomplexity, 3)$Group.1) # high disorder, high CR
+  # high disorder, low CR -     1, 167, 58
+  # high disorder, medium CR -  8, 70, 67
+  # high disorder, high CR -    131, 15, 195
+
   lowest_disorder <- mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin <= 2,]
   # min disorder patterns: 163 55 178 4 23 87 174 89 158 
 
-  mean_pattern_bydisorder_bycomplexity_bybeauty <- lowest_disorder[order(lowest_disorder$complexity_rating, lowest_disorder$beauty_rating),]
+  mean_pattern_lowdisorder_bycomplexity <- lowest_disorder[order(lowest_disorder$complexity_rating),]
 
-  print(head(mean_pattern_bydisorder_bycomplexity_bybeauty, 3)$Group.1)
-  print(tail(mean_pattern_bydisorder_bycomplexity_bybeauty, 3)$Group.1)
-  # low disorder, high CR, high BR -      89, 87, 159
-  # low disorder, medium CR, medium BR -  199, 132, 133
-  # low disorder, low CR, low BR -        163, 55, 4
+  print(head(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1) # low disorder, low CR
+  cat(mean_pattern_lowdisorder_bycomplexity[round(nrow(mean_pattern_lowdisorder_bycomplexity)/2) - 1,]$Group.1, mean_pattern_lowdisorder_bycomplexity[round(nrow(mean_pattern_lowdisorder_bycomplexity)/2),]$Group.1, mean_pattern_lowdisorder_bycomplexity[round(nrow(mean_pattern_lowdisorder_bycomplexity)/2) + 1,]$Group.1) # low disorder, medium CR
+  print(tail(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1) # low disorder, high CR
+  # low disorder, low CR -     163, 55, 4
+  # low disorder, medium CR -  199, 132, 133
+  # low disorder, high CR -    89, 87, 159
 }
 
 ############ MEDIATION ANALYSIS #############
-
 # Run porcess
 # Requires process.R from Process running in the background
 {
-  process(data = data_train_fold2, y = "beauty_rating", x = "obj_comp_withrandint_withrandslope", m = "complexity_rating", w = "disorder", model = 15, center = 2, moments = 1, modelbt = 1, boot = 10000, seed = 20, jn = 1)
+  process(data = data_train_fold2, y = "beauty_rating", x = "obj_comp_withrandint_withrandslopes", m = "complexity_rating", w = "disorder", model = 15, center = 2, moments = 1, modelbt = 1, boot = 10000, seed = 20, jn = 1)
 }
 
 # Mediation analysis - Table 4

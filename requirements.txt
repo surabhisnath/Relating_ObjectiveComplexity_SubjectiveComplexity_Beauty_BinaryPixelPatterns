@@ -1,4 +1,3 @@
-Python libraries:
 numpy
 pybdm
 sys
@@ -10,14 +9,7 @@ os
 statsmodels
 seaborn
 scipy
-
-
-R libraries:
-lme4
-ggplot2
-interactions
-dplyr
-mediation
+pickle
 
 
 
