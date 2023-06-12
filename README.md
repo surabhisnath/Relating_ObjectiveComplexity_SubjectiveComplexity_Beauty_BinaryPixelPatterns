@@ -6,7 +6,7 @@ This repository contains the data and scripts for the paper "Relating Objective 
 
 The complexity of images critically influences our assessment of their beauty. However, studies relating assessments of complexity and beauty to potential objective measures are hampered by the use of hand-crafted stimuli which are hard to reproduce and manipulate. To tackle this, we developed a systematic method for generating 2D black-and-white patterns using cellular automata, and collected ratings of complexity and beauty from 80 participants. We developed various computational measures of pattern quantification such as density, entropies, local spatial complexity, Kolmogorov complexity, and asymmetries. We also introduced an “intricacy” measure quantifying the number of components in a pattern using a graph-based approach. We related these objective measures with participant judgements of complexity and beauty to find that a weighted combination of local spatial complexity and intricacy was an effective predictor (R2test = 0.47) of complexity. This implies that people’s complexity ratings depend on the number of distinct elements in the pattern along with the elements’ local spatial distribution. Therefore, global and local image features are integrated to determine complexity judgements. Furthermore, we found a positive linear influence of complexity ratings on beauty, with a negative linear influence of disorder (asymmetry and entropy of means), and a negative interaction between the two (R2test = 0.64). This implies that there is beauty in complexity as long as there is sufficient order. Lastly, a moderated mediation analysis showed that complexity mediates the influence of objective complexity on beauty, implying that complexity supplies useful information over and above objective complexity.
 
-## Setup
+## Respository Description
 
 The repository contains the following folders:
 - **data**: contains the processed .csv data files from 80 participants. Each file has 6 columns indicating the pattern number, complexity reponse (0-100), beauty response (0-100), reaction time (ms), is_repeated flag which indicates if the pattern is repeated (6 patterns were repeated for each participant) and trial number. The dictionary mapping pattern names to pattern numbers is provided in `scrips/utils/pattern_to_num.pk`. The data folder also has info.csv which stores participant details such as dmeographics, open-ended reponses, number of attention checks presented/failed and total time taken.
@@ -15,3 +15,7 @@ The repository contains the following folders:
 - **measures**: this folder contains implementations of all pattern quantification measures described in Section 2.2 in the paper. 
 - **patterns**: contains all the patterns used in the experiment in the folder `15by15`. `instructions` folder contains the patterns used in the task description, `attentioncheck` folder consists of the patterns which were used as attention checks. `experiment` folder consists of 4 sets each with 54 patterns used in the experiment.
 - **scripts**: contains analyses scripts `DescriptiveAnalysis.ipynb` and `MixedEffectsModelling.R`. Plots and model fits are stored in `plots` and `model_fits` respectively.
+
+## Setup
+
+To reproduce the plots and results from the paper, simply run `DescriptiveAnalysis.ipynb` and `MixedEffectsModelling.R`.
