@@ -28,7 +28,7 @@ The repository contains the following folders:
 We recommend setting up a python virtual environment and installing all the requirements. Please follow these steps:
 
 ```bash
-git clone https://github.com/surabhisnath/.git](https://github.com/surabhisnath/Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns.git
+git clone https://github.com/surabhisnath/Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns.git
 cd Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns
 
 python3 -m venv ./env
