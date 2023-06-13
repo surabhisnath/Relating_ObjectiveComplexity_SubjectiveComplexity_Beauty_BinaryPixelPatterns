@@ -54,4 +54,4 @@ If you found this work useful, please consider citing us:
 
 ## Contact
 
-Please feel free to open an issue or email us at surabhi.nath@tuebingen.mpg.de
+Please feel free to email us at surabhi.nath@tuebingen.mpg.de
