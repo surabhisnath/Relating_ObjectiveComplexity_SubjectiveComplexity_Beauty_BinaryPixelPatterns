@@ -67,7 +67,9 @@ def get_pixel(i, j, grid, totalistic, outer_totalistic, nine_neighbourhood, five
     return 0
 
 def evolve(evolution, code, totalistic, outer_totalistic, nine_neighbourhood, five_neighbourhood, IC, initial, s1, s2, powers):
-
+    """
+    This function takes in all generation parameters such as number of evolution steps, rule code, totalistic/outer-totalistic, neighbourhood size, IC, initial configuration and evolves the CA and saves every 8th pattern in stimuli_path and the whole evolution gif in gif_path
+    """
     # Evolve the grid and save every 8th pattern
     grid = initial
     patterns = []
