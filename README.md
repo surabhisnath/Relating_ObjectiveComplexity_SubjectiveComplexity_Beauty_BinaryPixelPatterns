@@ -21,8 +21,37 @@ The repository contains the following folders:
 - **generator**: `generator/cellular_automata.py` is the stimuli generation script. Generates 2 folders `generator/stimuli/` containing all stimuli and `generator/gifs/` containing stimuli evolutions saved as .gif files.
 - **measures**: this folder contains implementations of all pattern quantification measures described in Section 2.2 in the paper. 
 - **patterns**: contains all the patterns used in the experiment in the folder `15by15`. `instructions` folder contains the patterns used in the task description, `attentioncheck` folder consists of the patterns which were used as attention checks. `experiment` folder consists of 4 sets each with 54 patterns used in the experiment.
-- **scripts**: contains analyses scripts `DescriptiveAnalysis.ipynb` and `MixedEffectsModelling.R`. Plots and model fits are stored in `plots` and `model_fits` respectively.
+- **scripts**: contains analysis scripts `DescriptiveAnalysis.ipynb` and `MixedEffectsModelling.R`. Plots and model fits are stored in `plots` and `model_fits` respectively.
 
 ## Setup
 
+We recommend setting up a python virtual environment and installing all the requirements. Please follow these steps:
+
+```bash
+git clone https://github.com/surabhisnath/Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns.git
+cd Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns
+
+python3 -m venv ./env
+source env/bin/activate
+
+pip install -r requirements.txt`
+```
+
 To reproduce the plots and results from the paper, simply run `DescriptiveAnalysis.ipynb` and `MixedEffectsModelling.R`.
+
+## Citation
+
+If you found this work useful, please consider citing us:
+
+```
+@article{nath2023relating,
+  title={Relating Objective Complexity, Subjective Complexity and Beauty},
+  author={Nath, Surabhi S and Br{\"a}ndle, Franziska and Schulz, Eric and Dayan, Peter and Brielmann, Aenne Annelie},
+  year={2023},
+  publisher={PsyArXiv}
+}
+```
+
+## Contact
+
+Please feel free to email us at surabhi.nath@tuebingen.mpg.de
