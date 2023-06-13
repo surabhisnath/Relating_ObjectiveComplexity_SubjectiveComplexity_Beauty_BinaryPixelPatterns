@@ -70,7 +70,7 @@ def evolve(evolution, code, totalistic, outer_totalistic, nine_neighbourhood, fi
     """
     This function takes in all generation parameters such as number of evolution steps, rule code, totalistic/outer-totalistic, neighbourhood size, IC, initial configuration and evolves the CA and saves every 8th pattern in stimuli_path and the whole evolution gif in gif_path
     """
-    # Evolve the grid and save every 8th pattern
+
     grid = initial
     patterns = []
     stimuli = {}
@@ -117,7 +117,7 @@ def evolve(evolution, code, totalistic, outer_totalistic, nine_neighbourhood, fi
 
 def generate(grid_size, evolution, rules):
     """
-    # This function generates and saves all stimuli and evolution gifs into 2 folders - stimuli and gifs in the generator folder.
+    This function generates and saves all stimuli and evolution gifs into 2 folders - stimuli and gifs in the generator folder.
 
     Args:
         grid_size (integer): grid size of the stimuli
