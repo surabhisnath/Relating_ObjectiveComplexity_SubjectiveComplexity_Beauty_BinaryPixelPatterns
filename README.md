@@ -31,13 +31,31 @@ We recommend setting up a python virtual environment and installing all the requ
 git clone https://github.com/surabhisnath/Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns.git
 cd Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns
 
-python3 -m venv ./env
-source env/bin/activate
+python3 -m venv .env
 
-pip install -r requirements.txt`
+# On macOS/Linux
+source env/bin/activate
+# On Windows
+.env\Scripts\activate
+
+pip install -r requirements.txt
 ```
 
-To reproduce the plots and results from the paper, simply run `DescriptiveAnalysis.ipynb` and `MixedEffectsModelling.R`.
+To reproduce the plots from the paper, run 
+```bash
+jupyter-lab
+```
+and open the file `scripts/DescriptiveAnalysis.ipynb`. 
+
+To reproduce the model fits from the paper
+- Ensure you have a working R installation
+- Install the required libraries
+  - *E.g.*, `install.packages(c("lme4", "ggplot2", "interactions", "dplyr", "mediation"))` from an R console
+- Run `MixedEffectsModelling.R`
+```R
+setwd('/path/to/Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns/scripts')
+source("MixedEffectsModelling.R")
+```
 
 ## Citation
 
