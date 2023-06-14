@@ -50,10 +50,11 @@ and open the file `scripts/DescriptiveAnalysis.ipynb`.
 To reproduce the model fits from the paper
 - Ensure you have a working R installation
 - Install the required libraries
-  - *E.g.*, `install.packages(c("lme4", "ggplot2", "interactions", "dplyr", "mediation"))` from an R console
+  - *E.g.*, `install.packages(c("lme4", "ggplot2", "interactions", "dplyr", "mediation", "lmerTest"))` from an R console
 - Run `MixedEffectsModelling.R`
 ```R
 setwd('/path/to/Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns/scripts')
+source("process.R")
 source("MixedEffectsModelling.R")
 ```
 
