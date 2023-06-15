@@ -5,6 +5,10 @@ import sys
 sys.path.insert(1, '../entropy/')
 from calculate_entropy import *
 
+"""
+This module implements the mean entropy measure. Refer to Section 2.2 (2ii) and AII for details.
+"""
+
 def calculate_mean_entropy(gridorflatgrid, grid_size):
     """
     This function calculates the mean entropy of a pattern across all scales
@@ -36,19 +40,22 @@ if __name__ == '__main__':
     # calculate density for some example patterns:
     #    1) Full black pattern
     #    2) White grid with one central black CellType
-    #    3) Checkarboard
+    #    3) checkerboard
     #    4) Random pattern
     
     all_black = np.ones(grid_size * grid_size, dtype=int)
+    assert calculate_mean_entropy(all_black, grid_size) == 0.0
     print(calculate_mean_entropy(all_black, grid_size))
 
     grid_with_one_centre = np.zeros(grid_size * grid_size, dtype=int)
     grid_with_one_centre[(grid_size * grid_size) //2] = 1
+    assert calculate_mean_entropy(grid_with_one_centre, grid_size) == 0.0563395650797406
     print(calculate_mean_entropy(grid_with_one_centre, grid_size))
 
-    checkarboard = np.zeros(grid_size * grid_size, dtype=int)
-    checkarboard[1::2] = 1
-    print(calculate_mean_entropy(checkarboard, grid_size))
+    checkerboard = np.zeros(grid_size * grid_size, dtype=int)
+    checkerboard[1::2] = 1
+    assert calculate_mean_entropy(checkerboard, grid_size) == 0.9326281610774253
+    print(calculate_mean_entropy(checkerboard, grid_size))
 
     random = np.random.choice([0, 1], size=(grid_size, grid_size))
     print(calculate_mean_entropy(random, grid_size))

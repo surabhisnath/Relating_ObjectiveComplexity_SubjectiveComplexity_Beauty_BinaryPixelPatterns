@@ -14,6 +14,7 @@
 }
 
 # Catterpillar plot for random effects
+# Code borrowed from: https://stackoverflow.com/questions/13847936/plot-random-effects-from-lmer-lme4-package-using-qqmath-or-dotplot-how-to-mak, answer by caracal
 ggCaterpillar <- function(re, QQ=FALSE, likeDotplot=TRUE, detailedFacetLabs = TRUE) {
   f <- function(x, nm = "ranef plot") {
     pv   <- attr(x, "postVar")
@@ -85,19 +86,11 @@ modelanalysis <- function(complexity_or_beauty, model1, model2, model3, vif, mod
 
   # AIC
   # print AIC of each fold and average AIC
-  # Uncomment next 3 lines to print AIC of each fold
-  # print(noquote(paste("AIC1 =", AIC(model1))))
-  # print(noquote(paste("AIC2 =", AIC(model2))))
-  # print(noquote(paste("AIC3 =", AIC(model3))))
   meanAIC = (AIC(model1) + AIC(model2) + AIC(model3))/3
   print(noquote(paste("Mean AIC =", meanAIC)))
   
   # BIC
   # print BIC of each fold and average BIC
-  # Uncomment next 3 lines to print BIC of each fold
-  # print(noquote(paste("BIC1 =", BIC(model1))))
-  # print(noquote(paste("BIC2 =", BIC(model2))))
-  # print(noquote(paste("BIC3 =", BIC(model3))))
   meanBIC = (BIC(model1) + BIC(model2) + BIC(model3))/3
   print(noquote(paste("Mean BIC =", meanBIC)))
 
@@ -256,9 +249,11 @@ modelanalysis <- function(complexity_or_beauty, model1, model2, model3, vif, mod
   metrics2 = c(meanrsqtrain, varrsqtrain, meanrsqtest, varrsqtest, meanRMSEtrain, varRMSEtrain, meanRMSEtest, varRMSEtest)
   metrics2 = signif(metrics2, digits = 2)
   
+  # returns all metrics
   return(c(metrics1, metrics2))
 }
 
+# Only for Figure AIII.2
 plot_model <- function(model, path) {
   # Convert data to data frames
   train_df <- data.frame(predictions = predict(model, data_train_fold1), complexity_rating = data_train_fold1$complexity_rating)
@@ -377,7 +372,7 @@ models_in_paper_complexity <- list("1 + (1 | subject)",
           "LSC + LSCsq + intricacy_4 + intricacy_4sq + (1 | subject)"
           )
 
-# List of all models of complexity
+# List of all models of complexity - Table AIII.1
 all_models_complexity <- list("1 + (1 | subject)",
           "1 + (1 | subject) + (1 | set)",
           "density + (1 | subject)",
@@ -418,35 +413,29 @@ all_models_complexity <- list("1 + (1 | subject)",
           )
 
 # Analyze a subset of the complexity models - Table 1
+# Save all results to model_fits/models_complexity.csv
 {
   df = data.frame(matrix(ncol=13,nrow=0, dimnames=list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var", "Rsq train mean", "Rsq train var", "Rsq test mean", "Rsq test var", "RMSE train mean", "RMSE train var", "RMSE test mean", "RMSE test var"))))
 
   id = 0
-  for (formula in all_models_complexity) {    # can also run for all_models instead (replace models_in_paper_complexity by all_models_complexity)
+  for (formula in models_in_paper_complexity) {    # can also run for all_models instead (replace models_in_paper_complexity by all_models_complexity)
     id = id + 1
     fullformula = paste("complexity_rating ~", formula)
-    # f1 = lmer(fullformula, data = data_train_fold1, control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8, optimizer="bobyqa")))
-    # f2 = lmer(fullformula, data = data_train_fold2, control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8, optimizer="bobyqa")))
-    # f3 = lmer(fullformula, data = data_train_fold3, control=lmerControl(optCtrl=list(ftol_abs=1e-8,xtol_abs=1e-8, optimizer="bobyqa")))
     f1 = lmer(fullformula, data = data_train_fold1, control=lmerControl(optimizer="bobyqa"))
     f2 = lmer(fullformula, data = data_train_fold2, control=lmerControl(optimizer="bobyqa"))
     f3 = lmer(fullformula, data = data_train_fold3, control=lmerControl(optimizer="bobyqa"))
-    # Uncomment next 3 lines to print summaries
-    # print(summary(f1))
-    # print(summary(f2))
-    # print(summary(f3))
     print(noquote(fullformula))
 
     rowparts = modelanalysis(1, f1, f2, f3, 1)
     df[nrow(df) + 1, ] = c(id, noquote(fullformula), rowparts)
   }
 
-  View(df)
   write.csv(df, "model_fits/models_complexity.csv", row.names=FALSE)
 }
 
-# Print performance of best model and make plots
-# Figure 7
+# Print performance of best model and make plots (train, test and random effects)
+# Figure 7, Figure AIII.7(A)
+# Plots saved to ./plots/
 {
   bestformula = "LSC + intricacy_4 + ((LSC + intricacy_4) | subject)"
   bestfullformula = paste("complexity_rating ~", bestformula)
@@ -464,6 +453,7 @@ all_models_complexity <- list("1 + (1 | subject)",
 }
 
 # Make plots for only LSC and only intricacy - Figure AIII.2
+# Plots saved to ./plots/
 {
   formula_LSC = "LSC + (1 | subject)"
   fullformula_LSC = paste("complexity_rating ~", formula_LSC)
@@ -481,31 +471,26 @@ all_models_complexity <- list("1 + (1 | subject)",
   plot_model(model_both, "complexity_train_test_both.pdf")
 }
 
-# Print fixed effects
+# Print fixed effects - Table 1B
 {
   fixef(f)
-}
-
-# Print random effects
-{
-  ranef(f)
 }
 
 # Write objective complexity column onto data for mediation analysis
 {
   data$obj_comp <- (fixef(f)["LSC"] * data$LSC) + (fixef(f)["intricacy_4"] * data$intricacy_4) + fixef(f)["(Intercept)"]
   ranef <- ranef(f)
-  raneflist1 <- ranef$subject[,"(Intercept)"]
-  raneflist2 <- ranef$subject[,"LSC"]
-  raneflist3 <- ranef$subject[,"intricacy_4"]
-  data$randint <- rep(raneflist1, each=60)
-  data$randslope_LSC <- rep(raneflist2, each=60)
-  data$randslope_intricacy <- rep(raneflist3, each=60)
+  ranefintercept <- ranef$subject[,"(Intercept)"]
+  ranefLSC <- ranef$subject[,"LSC"]
+  ranefintricacy <- ranef$subject[,"intricacy_4"]
+  data$randint <- rep(ranefintercept, each=60)
+  data$randslope_LSC <- rep(ranefLSC, each=60)
+  data$randslope_intricacy <- rep(ranefintricacy, each=60)
   data$obj_comp_withrandint <- data$obj_comp + data$randint
   data$obj_comp_withrandint_withrandslopes <- ((fixef(f)["LSC"] + data$randslope_LSC) * data$LSC) + ((fixef(f)["intricacy_4"] + data$randslope_intricacy) * data$intricacy_4) + fixef(f)["(Intercept)"] + data$randint
 }
 
-# Get pattern numbers with maximum and minimum discrepency
+# Get pattern numbers with maximum and minimum discrepency - visualised in DescriptiveAnalysis.ipynb
 {
   data$discrepancy <- my_scale(data$obj_comp_withrandint_withrandslopes - data$complexity_rating)
   mean_pattern <- aggregate(data, list(data$pattern), mean)
@@ -572,7 +557,7 @@ models_in_paper_beauty <- list("complexity_rating + (1 | subject)",
           "(LSC + intricacy_4) * disorder + (disorder | subject)"
           )
 
-# List of all models of beauty
+# List of all models of beauty - Table AIII.2
 all_models_beauty <- list("complexity_rating + (1 | subject)",
           "complexity_rating + asymm + entropy + (1 | subject)",
           "complexity_rating + asymm + entropy + (complexity_rating | subject)",
@@ -601,7 +586,7 @@ all_models_beauty <- list("complexity_rating + (1 | subject)",
 
   id = 0
   # Analyze a subset of the beauty models - Table 2
-  for (formula in all_models_beauty) {   # can also run for all_models instead (replace models_in_paper_beauty by all_models_beauty)
+  for (formula in models_in_paper_beauty) {   # can also run for all_models instead (replace models_in_paper_beauty by all_models_beauty)
     id = id + 1
     fullformula = paste("beauty_rating ~", formula)
     f1 = lmer(fullformula, data = data_train_fold1, control=lmerControl(optimizer="bobyqa"))
@@ -616,12 +601,12 @@ all_models_beauty <- list("complexity_rating + (1 | subject)",
     df[nrow(df) + 1, ] = c(id, noquote(fullformula), c(rowparts))
   }
 
-  View(df)
   write.csv(df, "model_fits/models_beauty.csv", row.names=FALSE)
 }
 
-# Make plots for best model
-# Figure 8 and Figure AIII.5(b)
+# Print performance of best model and make plots (train, test and random effects)
+# Figure 9, Figure AIII.7(B)
+# Plots saved to ./plots/
 {
   bestformula = "complexity_rating * disorder + (disorder | subject)"
   bestfullformula = paste("beauty_rating ~", bestformula)
@@ -638,16 +623,14 @@ all_models_beauty <- list("complexity_rating + (1 | subject)",
   ggsave("plots/random_effects_beauty.pdf")
 }
 
+# Print fixed effects - Table 2B
 {
   fixef(f)
 }
 
-{
-  ranef(f)
-}
-
 # Create interaction plot
 # Figure 10
+# Plot saved to ./plots/
 {
   pdf(file="plots/complexity_order_interaction_for_beauty.pdf", width = 10, height = 10)
   par(mar=c(5,6,4,1)+.1)
@@ -666,7 +649,7 @@ all_models_beauty <- list("complexity_rating + (1 | subject)",
   dev.off()
 }
 
-# Get patterns at interaction extremes for Figure 7
+# Get patterns at interaction extremes for Figure 10
 {
   data$complexity_rating_bin <- findInterval(data$complexity_rating, c(-1, 0, 1, 2))
   # bins: 0, 1, 2, 3, 4
@@ -702,7 +685,8 @@ all_models_beauty <- list("complexity_rating + (1 | subject)",
 }
 
 ############ MEDIATION ANALYSIS #############
-# Run porcess
+
+# Run porcess.R
 # Requires process.R from Process running in the background
 {
   process(data = data_train_fold2, y = "beauty_rating", x = "obj_comp_withrandint_withrandslopes", m = "complexity_rating", w = "disorder", model = 15, center = 2, moments = 1, modelbt = 1, boot = 10000, seed = 20, jn = 1)

@@ -1,6 +1,10 @@
 author = 'Surabhi S Nath'
 import numpy as np
 
+'''
+This module implememts the asymmetry measure. Refer to Section 2.2 (6) and AII for details.
+'''
+
 def get_coords(grid):
 	"""
 	This function returns the indices and count of black pixels in the pattern
@@ -67,19 +71,22 @@ if __name__ == "__main__":
     # calculate density for some example patterns:
     #    1) Full black pattern
     #    2) White grid with one central black CellType
-    #    3) Checkarboard
+    #    3) checkerboard
     #    4) Random pattern
-    
+   
     all_black = np.ones(grid_size * grid_size)
+    assert calculate_asymmetry(all_black, grid_size) == (0.0, 0.0)
     print(calculate_asymmetry(all_black, grid_size))
 
     grid_with_one_centre = np.zeros(grid_size * grid_size)
     grid_with_one_centre[(grid_size * grid_size) //2] = 1
+    assert calculate_asymmetry(grid_with_one_centre, grid_size) == (0.0, 0.0)
     print(calculate_asymmetry(grid_with_one_centre, grid_size))
 
-    checkarboard = np.zeros(grid_size * grid_size)
-    checkarboard[1::2] = 1
-    print(calculate_asymmetry(checkarboard, grid_size))
+    checkerboard = np.zeros(grid_size * grid_size)
+    checkerboard[1::2] = 1
+    assert calculate_asymmetry(checkerboard, grid_size) == (0.0, 0.0)
+    print(calculate_asymmetry(checkerboard, grid_size))
 
     random = np.random.choice([0, 1], size=(grid_size, grid_size))
     print(calculate_asymmetry(random, grid_size))

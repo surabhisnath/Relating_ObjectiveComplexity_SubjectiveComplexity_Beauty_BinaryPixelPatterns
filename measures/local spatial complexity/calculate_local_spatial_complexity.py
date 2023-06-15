@@ -1,6 +1,11 @@
 author = 'Surabhi S Nath'
 import numpy as np
 
+"""
+This module implements the local spatial complexity measure based on Javaheri Javid, M. A. (2019). Aesthetic Automata: Synthesis and Simulation of Aesthetic Behaviour in Cellular Automata (Doctoral dissertation, Goldsmiths, University of London).
+Refer to Section 2.2 (3) and AII for details.
+"""
+
 def get_tuples(col1, col2, dirn, grid, grid_size):
 	"""
 	This function calculates the numerator of the conditional and joint distributions and the denominator of the conditional distribution
@@ -132,22 +137,22 @@ if __name__ == "__main__":
 	# calculate density for some example patterns:
 	#    1) Full black pattern
 	#    2) White grid with one central black CellType
-	#    3) Checkarboard
+	#    3) checkerboard
 	#    4) Random pattern
 
 	all_black = np.ones(grid_size * grid_size, dtype=int)
+	assert calculate_local_spatial_complexity(all_black, grid_size) == (0.0, 0.0)
 	print(calculate_local_spatial_complexity(all_black, grid_size))
 
 	grid_with_one_centre = np.zeros(grid_size * grid_size, dtype=int)
 	grid_with_one_centre[(grid_size * grid_size) //2] = 1
+	assert calculate_local_spatial_complexity(grid_with_one_centre, grid_size) == (0.04331646911530629, 0.0)
 	print(calculate_local_spatial_complexity(grid_with_one_centre, grid_size))
 
-	checkarboard = np.zeros(grid_size * grid_size, dtype=int)
-	checkarboard[1::2] = 1
-	print(calculate_local_spatial_complexity(checkarboard, grid_size))
+	checkerboard = np.zeros(grid_size * grid_size, dtype=int)
+	checkerboard[1::2] = 1
+	assert calculate_local_spatial_complexity(checkerboard, grid_size) == (0.0, 0.0)
+	print(calculate_local_spatial_complexity(checkerboard, grid_size))
 
 	random = np.random.choice([0, 1], size=(grid_size, grid_size))
 	print(calculate_local_spatial_complexity(random, grid_size))
-
-# Ref:
-# Javaheri Javid, M. A. (2019). Aesthetic Automata: Synthesis and Simulation of Aesthetic Behaviour in Cellular Automata (Doctoral dissertation, Goldsmiths, University of London).

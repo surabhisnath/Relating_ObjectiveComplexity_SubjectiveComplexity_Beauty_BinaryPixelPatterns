@@ -2,7 +2,10 @@ author = 'Surabhi S Nath'
 import numpy as np
 import sys
 
-# Code based on GeeksforGeeks: https://www.geeksforgeeks.org/program-to-count-number-of-connected-components-in-an-undirected-graph/
+"""
+This module implements the intricacy measure using https://www.geeksforgeeks.org/program-to-count-number-of-connected-components-in-an-undirected-graph/.
+Refer to Section 2.2 (5) and AII for details.
+"""
 
 class Graph:
     """
@@ -126,19 +129,22 @@ if __name__ == "__main__":
     # calculate density for some example patterns:
     #    1) Full black pattern
     #    2) White grid with one central black CellType
-    #    3) Checkarboard
+    #    3) checkerboard
     #    4) Random pattern
     
     all_black = np.ones(grid_size * grid_size)
+    assert calculate_intricacy(all_black, grid_size) == (1, 1)
     print(calculate_intricacy(all_black, grid_size))
 
     grid_with_one_centre = np.zeros(grid_size * grid_size)
     grid_with_one_centre[(grid_size * grid_size) //2] = 1
+    assert calculate_intricacy(grid_with_one_centre, grid_size) == (2, 2)
     print(calculate_intricacy(grid_with_one_centre, grid_size))
 
-    checkarboard = np.zeros(grid_size * grid_size)
-    checkarboard[1::2] = 1
-    print(calculate_intricacy(checkarboard, grid_size))
+    checkerboard = np.zeros(grid_size * grid_size)
+    checkerboard[1::2] = 1
+    assert calculate_intricacy(checkerboard, grid_size) == (225, 2)
+    print(calculate_intricacy(checkerboard, grid_size))
 
     random = np.random.choice([0, 1], size=(grid_size, grid_size))
     print(calculate_intricacy(random, grid_size))

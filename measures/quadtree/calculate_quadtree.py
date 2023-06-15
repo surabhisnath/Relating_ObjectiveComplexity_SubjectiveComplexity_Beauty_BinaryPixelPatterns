@@ -1,6 +1,10 @@
 author = 'Surabhi S Nath'
 import numpy as np
 
+"""
+This module implements the quadtree measure. Refer to AII for details.
+"""
+
 def all_same(grid):
     """
     Checks if all pixels of the subgrid are the same state
@@ -60,19 +64,22 @@ if __name__ == "__main__":
     # calculate density for some example patterns:
     #    1) Full black pattern
     #    2) White grid with one central black CellType
-    #    3) Checkarboard
+    #    3) checkerboard
     #    4) Random pattern
 
     all_black = np.ones(grid_size * grid_size, dtype=int)
+    assert calculate_quadtree(all_black, grid_size) == 0 
     print(calculate_quadtree(all_black, grid_size))
 
     grid_with_one_centre = np.zeros(grid_size * grid_size, dtype=int)
     grid_with_one_centre[(grid_size * grid_size) //2] = 1
+    assert calculate_quadtree(grid_with_one_centre, grid_size) == 4 
     print(calculate_quadtree(grid_with_one_centre, grid_size))
 
-    checkarboard = np.zeros(grid_size * grid_size, dtype=int)
-    checkarboard[1::2] = 1
-    print(calculate_quadtree(checkarboard, grid_size))
+    checkerboard = np.zeros(grid_size * grid_size, dtype=int)
+    checkerboard[1::2] = 1
+    assert calculate_quadtree(checkerboard, grid_size) == 84
+    print(calculate_quadtree(checkerboard, grid_size))
 
     random = np.random.choice([0, 1], size=(grid_size, grid_size))
     print(calculate_quadtree(random, grid_size))

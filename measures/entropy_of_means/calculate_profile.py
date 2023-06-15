@@ -53,6 +53,4 @@ def profile(matrices):
 
     @input matrices The set of scaled filtered matrices
     """
-    print("hi")
-    print(matrices[1])
     return [matrix_entropy(scale) for scale in matrices]
