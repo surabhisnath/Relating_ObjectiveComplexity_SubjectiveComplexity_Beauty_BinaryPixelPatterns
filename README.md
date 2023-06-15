@@ -34,7 +34,7 @@ cd Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns
 python3 -m venv .env
 
 # On macOS/Linux
-source env/bin/activate
+source .env/bin/activate
 # On Windows
 .env\Scripts\activate
 
