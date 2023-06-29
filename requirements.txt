@@ -2,8 +2,10 @@ imageio==2.19.3
 matplotlib==3.5.2
 numpy==1.21.5
 pybdm==0.1.0
-pandas
+pandas==1.4.4
 statsmodels
 seaborn
 scipy
+sklearn
+gmr
 jupyterlab
