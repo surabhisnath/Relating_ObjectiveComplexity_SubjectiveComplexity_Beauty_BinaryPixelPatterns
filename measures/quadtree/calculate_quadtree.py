@@ -42,10 +42,10 @@ def find_quadtree(grid, grid_size_rows, grid_size_cols):
         quad4 = grid[grid_size_rows//2:, grid_size_cols//2:]
 
         # Every splitting counts as one towards the quadtree measure. Call the function again on the 4 split subgrids
-        return 1 + find_quadtree(quad1, len(np.arange(0,grid_size_rows//2)), len(np.arange(0,grid_size_cols//2))) \
-                + find_quadtree(quad2, len(np.arange(0,grid_size_rows//2)), len(np.arange(grid_size_cols//2,grid_size_cols))) \
-                + find_quadtree(quad3, len(np.arange(grid_size_rows//2,grid_size_rows)), len(np.arange(0,grid_size_cols//2))) \
-                + find_quadtree(quad4, len(np.arange(grid_size_rows//2,grid_size_rows)), len(np.arange(grid_size_cols//2,grid_size_cols)))
+        return 1 + find_quadtree(quad1, grid_size_rows//2, grid_size_cols//2) \
+                + find_quadtree(quad2, grid_size_rows//2, grid_size_cols - (grid_size_cols//2)) \
+                + find_quadtree(quad3, grid_size_rows - (grid_size_rows//2), grid_size_cols//2) \
+                + find_quadtree(quad4, grid_size_rows - (grid_size_rows//2), grid_size_cols - (grid_size_cols//2))
 
 
 def calculate_quadtree(grid, grid_size):

@@ -98,6 +98,22 @@ def get_neigh(grid, rnum, cnum, dirn, grid_size):   # Origin: top left of matrix
             return grid[rnum-1, cnum-1], rnum-1, cnum-1
     return -1, -1, -1
 
+def set_graph_edges(graph, grid, grid_size, neighbourhood_size):
+    """
+    This functions initialises the graph edges based on neighbourhood size
+
+    Returns:
+        Graph: updated graph with edges
+    """
+    for rnum in range(grid_size):
+        for cnum in range(grid_size):
+            for dirn in range(neighbourhood_size):
+                neigh = get_neigh(grid, rnum, cnum, dirn, grid_size)
+                if neigh[0] == grid[rnum, cnum]:
+                    graph.addEdge(neigh[1] * grid_size + neigh[2], rnum * grid_size + cnum)
+    return graph
+
+
 def calculate_intricacy(grid, grid_size):
     """
     This function calculates the 4-neighbourhood and 8-neighbourhood intricacy of a pattern.
@@ -109,17 +125,9 @@ def calculate_intricacy(grid, grid_size):
     g1 = Graph(grid_size * grid_size)       # 4-neighbourhood
     g2 = Graph(grid_size * grid_size)       # 8-neighbourhood
 
-    for rnum in range(grid_size):
-        for cnum in range(grid_size):
-            for dirn in range(4):           # 4-neighbourhood intricacy
-                neigh = get_neigh(grid, rnum, cnum, dirn, grid_size)
-                if neigh[0] == grid[rnum, cnum]:
-                    g1.addEdge(neigh[1] * grid_size + neigh[2], rnum * grid_size + cnum)
-            
-            for dirn in range(8):           # 8-neighbourhood intricacy
-                neigh = get_neigh(grid, rnum, cnum, dirn, grid_size)
-                if neigh[0] == grid[rnum, cnum]:
-                    g2.addEdge(neigh[1] * grid_size + neigh[2], rnum * grid_size + cnum)
+    # set graph edges based on neighbourhood size
+    g1 = set_graph_edges(g1, grid, grid_size, 4)    # 4-neighbourhood
+    g2 = set_graph_edges(g2, grid, grid_size, 8)    # 8-neighbourhood
 
     return g1.NumberOfconnectedComponents(), g2.NumberOfconnectedComponents()
 

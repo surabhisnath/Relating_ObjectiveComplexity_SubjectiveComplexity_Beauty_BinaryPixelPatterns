@@ -6,6 +6,25 @@ This module implements the local spatial complexity measure based on Javaheri Ja
 Refer to Section 2.2 (3) and AII for details.
 """
 
+def get_i_j_(dirn, i, j):
+	if dirn == 1:
+		return i, j + 1
+	if dirn == 2:
+		return i, j - 1
+	if dirn == 3:
+		return i + 1, j
+	if dirn == 4:
+		return i - 1, j
+	if dirn == 5:
+		return i + 1, j + 1
+	if dirn == 6:
+		return i + 1, j - 1
+	if dirn == 7:
+		return i - 1, j + 1
+	if dirn == 8:
+		return i - 1, j - 1
+	return None, None
+
 def get_tuples(col1, col2, dirn, grid, grid_size):
 	"""
 	This function calculates the numerator of the conditional and joint distributions and the denominator of the conditional distribution
@@ -24,55 +43,12 @@ def get_tuples(col1, col2, dirn, grid, grid_size):
 	count_neigh = 0
 	for i in range(grid_size):
 		for j in range(grid_size):
-			if dirn == 1: # Up
-				if j + 1 < grid_size:
-					if grid[i, j + 1] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i, j + 1] == col2:
-						count_tuples += 1
-			elif dirn == 2: # Down
-				if j - 1 >= 0:
-					if grid[i, j - 1] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i, j - 1] == col2:
-						count_tuples += 1
-			elif dirn == 3: # Right
-				if i + 1 < grid_size:
-					if grid[i + 1, j] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i + 1, j] == col2:
-						count_tuples += 1
-			elif dirn == 4: # Left
-				if i - 1 >= 0:
-					if grid[i - 1, j] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i - 1, j] == col2:
-						count_tuples += 1
-			elif dirn == 5:
-				if i + 1 < grid_size and j + 1 < grid_size:
-					if grid[i + 1, j + 1] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i + 1, j + 1] == col2:
-						count_tuples += 1
-			elif dirn == 6:
-				if i + 1 < grid_size and j - 1 >= 0:
-					if grid[i + 1, j - 1] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i + 1, j - 1] == col2:
-						count_tuples += 1
-			elif dirn == 7:
-				if i - 1 >= 0 and j + 1 < grid_size:
-					if grid[i - 1, j + 1] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i - 1, j + 1] == col2:
-						count_tuples += 1
-			elif dirn == 8:
-				if i - 1 >= 0 and j - 1 >= 0:
-					if grid[i - 1, j - 1] == col2:
-						count_neigh += 1
-					if grid[i, j] == col1 and grid[i - 1, j - 1] == col2:
-						count_tuples += 1
-
+			i_, j_ = get_i_j_(dirn, i, j)
+			if i_ >= 0 and i_ < grid_size and j_ >= 0 and j_ < grid_size:
+				if grid[i_, j_] == col2:
+					count_neigh += 1
+				if grid[i, j] == col1 and grid[i_, j_] == col2:
+					count_tuples += 1
 	return count_neigh, count_tuples
 
 def get_joint_conditional(col1, col2, dirn, grid, grid_size):
@@ -90,19 +66,18 @@ def get_joint_conditional(col1, col2, dirn, grid, grid_size):
 	joint = num/den1
 	return conditional, joint
 
-def calculate_local_spatial_complexity(pattern, grid_size):
+def calculate_local_spatial_complexity(grid, grid_size):
 	"""
 	This function provides an implementation for the calculation of Spatial Complexity and Local Asymmetry as described in Javid, 2019.
 
 	Args:
-		pattern (array): pattern whose calculate local spatial complexity is being calculated
+		grid (array): pattern whose calculate local spatial complexity is being calculated
 		grid_size (integer): grid size of the pattern
 
 	Returns:
 		tuple: local spatial complexity and local asymmetry
 	"""
-	pattern = pattern.reshape(grid_size, grid_size)
-	grid = pattern.copy()
+	grid = grid.reshape(grid_size, grid_size)
 	states = np.array([0, 1])	# 2 states as binary grid
 	dirns = [1, 2, 3, 4, 5, 6, 7, 8]	# set of 8 directions
 	
@@ -136,7 +111,7 @@ if __name__ == "__main__":
 
 	# calculate density for some example patterns:
 	#    1) Full black pattern
-	#    2) White grid with one central black CellType
+	#    2) White grid with one central black cell
 	#    3) checkerboard
 	#    4) Random pattern
 
