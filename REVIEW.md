@@ -98,3 +98,66 @@
         - The date you copied it
     - `stats` imported but not used
 - Does that make sense?
+
+### `MixedEffectsModelling.R`
+
+- I notice you have a couple of `conflicted copy` files in the `plots` folder
+    - You can delete those, I assume
+
+- A few general stylistic things (for writing idiomatic R):
+    - Lines should be less than 80 characters
+    - It is not so common to use `{}` to define blocks
+    - Use `snake_case`, not `camelCase` for names
+    - Operators (*e.g.*, `+`, `=`, *etc.*) should always have spaces before and after
+    - Try to always use `<-` (rather than `=`) for assignment
+- (I have fixed some of these in the pull-request I made)
+- Some of these are too much work to change, but I think that comments can easily be made less than 80 characters
+
+- Line 1: 
+    - I think you should expand the top comment here to include more information about what it does
+    - You should also state that it is using `process.R`, and give some attributes
+    - Maybe also mention that the code for plotting *etc.*, is in `utils/Utils.R`
+- Line 6 (and others after):
+    - Now that the functions are gone, I would remove all of the top-level `{}` blocks, and outdent the code
+    - R doesn't like them (in terms of style)
+    - I think you can get the same effect using more complete comments at the start of each block
+- Line 11: Insert `source("process.R")`, so that it happens automatically?
+    - And, remove that line from the instructions in the `README.md` file
+- Lines 22, 23: `all_attemntion_failed` => `all_attention_failed`?
+- Line 29: Why view data? Why now?
+- Block starting at line 160:
+    - You have a `for` loop which is generating (and printing) a bunch of output
+    - I realise you don't have much control over how the results are printed
+    - You can, however, control the overall structure
+    - I think you should be printing information, and line breaks, as you loop, so that the output is at least a bit human-readable 
+- Line 194: In the comments you say that this is the plot for AIII.5, but I don't think it is
+- Line 220: You are using `f` here, which was defined on line 189. Can you do this earlier?
+- Line 223: You could mention here where you use the mediation analysis
+- Lines 242, 243: Printing some extra information here would be helpful
+- Block starting at 249: Maybe explain what `disorder`, `disorder_1`, `disorder_2` are for
+- Line 335+: Again, printing information while looping would be helpful
+- Line 368: `Figure AIII.5`?
+- Block beginning 381: I am not getting this plot generated. The resulting pdf is empty...
+- Line 418, 420, 430, 432: Printing more context would be helpful
+- Line 438+:
+    - Your actual results get entirely lost in the `process` output
+    - Is it worth waiting until the end of the last block in the file, and then outputting the values that you want to show, with a description of why they are important?
+
+### `utils/Utils.R`
+
+-  A few general things:
+    - Use `FALSE` rather than `F` if you want to set something to false
+    - My R linter doesn't like your variable names...
+        - It wants `meanAIC` to be `mean_aic`, *etc.*
+    - I am not really checking `ggCaterpillar`, since you have just taken the code from elsewhere
+
+- Line 57: it is a bit dangerous to use function names (*e.g.*, `print` and `plot`) as variable names as well
+- Line 77: `{` on the same line as the `for`
+- Line 78-81: Should this be commented? Can it be removed?
+    - Actually, is `VIFs` used for anything?
+- Lines 155, 168, 183, 196: Use `FALSE` rather than `F`
+- Line 212, 213: It seems like `plot_model` only works by accident...
+    - You are using two variables (`data_train_fold1` and `data_test_fold1`) which are not actually defined in the function
+    - I guess they must already exist in the workspace, which is why it works?
+    - Better to pass them in as arguments
+Lines 231, 232:  I am sure you can delete these ones!
