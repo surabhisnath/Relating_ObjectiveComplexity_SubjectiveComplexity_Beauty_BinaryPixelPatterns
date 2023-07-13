@@ -99,10 +99,15 @@
     - `stats` imported but not used
 - Does that make sense?
 
-### `MixedEffectsModelling.R`
+## `R` code
 
 - I notice you have a couple of `conflicted copy` files in the `plots` folder
     - You can delete those, I assume
+
+- Most important thing (I think):
+    - Block beginning 381: I am not getting this plot generated. The resulting pdf is empty...
+
+### `MixedEffectsModelling.R`
 
 - A few general stylistic things (for writing idiomatic R):
     - Lines should be less than 80 characters
@@ -123,6 +128,7 @@
     - I think you can get the same effect using more complete comments at the start of each block
 - Line 11: Insert `source("process.R")`, so that it happens automatically?
     - And, remove that line from the instructions in the `README.md` file
+- Line 14: Why set the seed? Why 20?
 - Lines 22, 23: `all_attemntion_failed` => `all_attention_failed`?
 - Line 29: Why view data? Why now?
 - Block starting at line 160:
