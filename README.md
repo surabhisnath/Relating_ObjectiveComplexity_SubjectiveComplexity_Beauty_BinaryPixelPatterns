@@ -48,6 +48,7 @@ To reproduce the plots from the paper, run
 jupyter-lab
 ```
 and open the file `scripts/DescriptiveAnalysis.ipynb`. 
+
 On running the file (either in one go or cell by cell), all plots are saved to scripts/plots/ folder and also displayed in the notebook for easier viewing.
 
 To reproduce the model fits from the paper
@@ -59,9 +60,9 @@ To reproduce the model fits from the paper
 setwd('/path/to/Relating_ObjectiveComplexity_SubjectiveComplexity_Beauty_BinaryPixelPatterns/scripts')
 source("process.R")
 source("MixedEffectsModelling.R")
+```
 On running the file, all plots are saved to scripts/plots/ folder and tables are saved to model_fits/.
 Lines printed on the terminal can largely be ignored.
-```
 
 
 
