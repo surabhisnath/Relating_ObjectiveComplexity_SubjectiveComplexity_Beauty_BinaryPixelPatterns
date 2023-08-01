@@ -8,6 +8,8 @@ http://stats.stackexchange.com/a/17556/43909
 Copyright 2014 Cosmo Harrigan
 This program is free software, distributed under the terms of the GNU LGPL v3.0
 
+Code copied from - https://github.com/cosmoharrigan/matrix-entropy in December 2021
+
 Refer to Section 2.2 (2iii) and AII for details.
 """
 
@@ -40,6 +42,7 @@ def calculate_entropy_of_means(flatgrid, grid_size):
     prof = profile(matrices)
     return np.mean(prof)
 
+# Part added by Surabhi S Nath for testing
 if __name__ == "__main__":
     grid_size = 15
     

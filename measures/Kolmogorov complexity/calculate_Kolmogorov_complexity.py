@@ -1,6 +1,5 @@
 author = 'Surabhi S Nath'
 import numpy as np
-import sys
 from pybdm import BDM
 
 """

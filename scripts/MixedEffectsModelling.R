@@ -1,5 +1,12 @@
 ## Author: Surabhi S Nath
-## Description: This script implements mixed effects models on complexity and beauty ratings.
+## Description: This script implements mixed effects models.
+## on complexity and beauty ratings.
+## Uses process.R which should be running in the background
+## Helper functions and code for plotting in utils/Utils.R
+## Things printed on the terminal can be largely ignored.
+## Important things are saved in plots/ and model_fits/:
+## tables written to model_fits/
+## plots saved in plots/
 
 # Imports
 {
@@ -11,16 +18,17 @@
   source("utils/Utils.R")
 
   # Set seed
-  set.seed(20)
+  set.seed(20) # Seed set randomly for reproducibility
 }
+
 # Setup
 {
   # Read data
   data <- read.csv("utils/stat_analysis.csv")
 
   # Remove people who failed all attention checks
-  all_attemntion_failed <- c("ls1hg9ya", "jjs7ytws")
-  data <- data[!data$subject %in% all_attemntion_failed, ]
+  all_attention_failed <- c("ls1hg9ya", "jjs7ytws")
+  data <- data[!data$subject %in% all_attention_failed, ]
 
   # Scale all variables in the data
   my_scale <- function(x) {
@@ -82,9 +90,6 @@
   data_test_fold3 <- setdiff(data_test_fold23, data_test_fold2)
   data_train_fold3 <- setdiff(data, data_test_fold3)
 }
-
-# View data
-View(data)
 
 # Notes:
 # participant in paper is subject here.
@@ -152,95 +157,129 @@ all_models_complexity <- list(
   "trial + (1 | subject)",
   "LSC + intricacy_4 + trial + ((LSC + intricacy_4) | subject)",
   "previous_complexity_rating + (trial | subject)",
-  "LSC + intricacy_4 + previous_complexity_rating + ((LSC + intricacy_4) | subject)"
+  "LSC + intricacy_4 + previous_complexity_rating + 
+  ((LSC + intricacy_4) | subject)"
 )
 
 # Analyze a subset of the complexity models - Table 1
-# Save all results to model_fits/models_complexity.csv
+# Save all results to model_fits/Table_1A_models_complexity.csv
 {
-  df <- data.frame(matrix(ncol = 13, nrow = 0, dimnames = list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var", "Rsq train mean", "Rsq train var", "Rsq test mean", "Rsq test var", "RMSE train mean", "RMSE train var", "RMSE test mean", "RMSE test var"))))
+  df <- data.frame(matrix(ncol = 13, nrow = 0, dimnames =
+  list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var",
+  "Rsq train mean", "Rsq train var", "Rsq test mean", "Rsq test var",
+  "RMSE train mean", "RMSE train var", "RMSE test mean", "RMSE test var"))))
 
   id <- 0
-  for (formula in models_in_paper_complexity) { # can also run for all_models instead (replace models_in_paper_complexity by all_models_complexity)
+  for (formula in models_in_paper_complexity) {
+    # can also run for all_models instead
+    # by replacing models_in_paper_complexity by all_models_complexity
+
     id <- id + 1
     fullformula <- paste("complexity_rating ~", formula)
-    f1 <- lmer(fullformula, data = data_train_fold1, control = lmerControl(optimizer = "bobyqa"))
-    f2 <- lmer(fullformula, data = data_train_fold2, control = lmerControl(optimizer = "bobyqa"))
-    f3 <- lmer(fullformula, data = data_train_fold3, control = lmerControl(optimizer = "bobyqa"))
-    print(noquote(fullformula))
+    f1 <- lmer(fullformula, data = data_train_fold1,
+    control = lmerControl(optimizer = "bobyqa"))
+    f2 <- lmer(fullformula, data = data_train_fold2,
+    control = lmerControl(optimizer = "bobyqa"))
+    f3 <- lmer(fullformula, data = data_train_fold3,
+    control = lmerControl(optimizer = "bobyqa"))
 
-    metrics <- modelanalysis("complexity", num_folds, list(f1, f2, f3), list(data_train_fold1, data_train_fold2, data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3), FALSE, TRUE, FALSE)
+    metrics <- modelanalysis("complexity", num_folds,
+    list(f1, f2, f3), list(data_train_fold1, data_train_fold2,
+    data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3),
+    FALSE, FALSE, fullformula) # set second last param to TRUE for printing
     df[nrow(df) + 1, ] <- c(id, noquote(fullformula), metrics)
   }
 
-  write.csv(df, "model_fits/models_complexity.csv", row.names = FALSE)
+  write.csv(df, "model_fits/Table_1A_models_complexity.csv", row.names = FALSE)
 }
 
-
-# Print performance of best model and make plots (train, test and random effects)
+# Print performance of best model and make plots
+# for train, test and random effects
 # Figure 7, Figure AIII.7(A)
 # Plots saved to ./plots/
 {
   bestformula <- "LSC + intricacy_4 + ((LSC + intricacy_4) | subject)"
   bestfullformula <- paste("complexity_rating ~", bestformula)
-  f1 <- lmer(bestfullformula, data = data_train_fold1, control = lmerControl(optimizer = "bobyqa"))
-  f2 <- lmer(bestfullformula, data = data_train_fold2, control = lmerControl(optimizer = "bobyqa"))
-  f3 <- lmer(bestfullformula, data = data_train_fold3, control = lmerControl(optimizer = "bobyqa"))
-  f <- lmer(bestfullformula, data = data_train_fold1, control = lmerControl(optimizer = "bobyqa"))
+  f1 <- lmer(bestfullformula, data = data_train_fold1,
+  control = lmerControl(optimizer = "bobyqa"))
+  f2 <- lmer(bestfullformula, data = data_train_fold2,
+  control = lmerControl(optimizer = "bobyqa"))
+  f3 <- lmer(bestfullformula, data = data_train_fold3,
+  control = lmerControl(optimizer = "bobyqa"))
+  f <- lmer(bestfullformula, data = data_train_fold1,
+  control = lmerControl(optimizer = "bobyqa"))
 
   # Plots data vs predictions on train and test data - Figure 66
-  metrics <- modelanalysis("complexity", num_folds, list(f1, f2, f3), list(data_train_fold1, data_train_fold2, data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3), FALSE, FALSE, TRUE)
+  metrics <- modelanalysis("complexity", num_folds,
+  list(f1, f2, f3), list(data_train_fold1, data_train_fold2,
+  data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3),
+  FALSE, TRUE)
 
-  # Plots random effects - Figure AIII.5(a)
+  # Plots random effects - Figure AIII.7(a)
   ggCaterpillar(ranef(f, condVar = TRUE))
-  ggsave("plots/random_effects_complexity.pdf")
+  ggsave("plots/Figure_AIII_7A_random_effects_complexity.pdf")
+}
+
+# Save fixed effects - Table 1B
+{
+  write.csv(fixef(f), file = "model_fits/Table_1B_fixed_effects_complexity.csv")
 }
 
 # Make plots for only LSC and only intricacy - Figure AIII.2
 # Plots saved to ./plots/
 {
-  formula_LSC <- "LSC + (1 | subject)"
-  fullformula_LSC <- paste("complexity_rating ~", formula_LSC)
-  model_LSC <- lmer(fullformula_LSC, data = data_train_fold1)
-  plot_model(model_LSC, "complexity_train_test_LSC.pdf")
+  formula_lsc <- "LSC + (1 | subject)"
+  fullformula_lsc <- paste("complexity_rating ~", formula_lsc)
+  model_lsc <- lmer(fullformula_lsc, data = data_train_fold1)
+  plot_model(model_lsc, "Figure_AIII_2A_complexity_train_test_LSC.pdf",
+  data_train_fold1, data_test_fold1)
 
   formula_intricacy <- "intricacy_4 + (1 | subject)"
   fullformula_intricacy <- paste("complexity_rating ~", formula_intricacy)
   model_intricacy <- lmer(fullformula_intricacy, data = data_train_fold1)
-  plot_model(model_intricacy, "complexity_train_test_intricacy.pdf")
+  plot_model(model_intricacy, "Figure_AIII_2B_complexity_train_test_intricacy.pdf",
+  data_train_fold1, data_test_fold1)
 
   formula_both <- "LSC + intricacy_4 + (1 | subject)"
   fullformula_both <- paste("complexity_rating ~", formula_both)
   model_both <- lmer(fullformula_both, data = data_train_fold1)
-  plot_model(model_both, "complexity_train_test_both.pdf")
+  plot_model(model_both, "Figure_AIII_2C_complexity_train_test_both.pdf",
+  data_train_fold1, data_test_fold1)
 }
 
-# Print fixed effects - Table 1B
+# Write objective complexity column onto data for mediation analysis (ref line 508)
 {
-  fixef(f)
-}
-
-# Write objective complexity column onto data for mediation analysis
-{
-  data$obj_comp <- (fixef(f)["LSC"] * data$LSC) + (fixef(f)["intricacy_4"] * data$intricacy_4) + fixef(f)["(Intercept)"]
+  data$obj_comp <- (fixef(f)["LSC"] * data$LSC) +
+  (fixef(f)["intricacy_4"] * data$intricacy_4) + fixef(f)["(Intercept)"]
   ranef <- ranef(f)
   ranefintercept <- ranef$subject[, "(Intercept)"]
-  ranefLSC <- ranef$subject[, "LSC"]
+  ranef_lsc <- ranef$subject[, "LSC"]
   ranefintricacy <- ranef$subject[, "intricacy_4"]
   data$randint <- rep(ranefintercept, each = 60)
-  data$randslope_LSC <- rep(ranefLSC, each = 60)
+  data$randslope_lsc <- rep(ranef_lsc, each = 60)
   data$randslope_intricacy <- rep(ranefintricacy, each = 60)
   data$obj_comp_withrandint <- data$obj_comp + data$randint
-  data$obj_comp_withrandint_withrandslopes <- ((fixef(f)["LSC"] + data$randslope_LSC) * data$LSC) + ((fixef(f)["intricacy_4"] + data$randslope_intricacy) * data$intricacy_4) + fixef(f)["(Intercept)"] + data$randint
+  data$obj_comp_withrandint_withrandslopes <- ((fixef(f)["LSC"] +
+  data$randslope_lsc) * data$LSC) + ((fixef(f)["intricacy_4"] +
+  data$randslope_intricacy) * data$intricacy_4) +
+  fixef(f)["(Intercept)"] + data$randint
 }
 
-# Get pattern numbers with maximum and minimum discrepency - visualised in DescriptiveAnalysis.ipynb
+# Get pattern numbers with maximum and minimum discrepency
+# visualised in DescriptiveAnalysis.ipynb
 {
-  data$discrepancy <- my_scale(data$obj_comp_withrandint_withrandslopes - data$complexity_rating)
+  data$discrepancy <- my_scale(data$obj_comp_withrandint_withrandslopes
+  - data$complexity_rating)
   mean_pattern <- aggregate(data, list(data$pattern), mean)
   inc_disc <- mean_pattern[order(mean_pattern$discrepancy), ]
-  print(tail(inc_disc, 10)$Group.1) # overestimation of complexity
-  print(head(inc_disc, 8)$Group.1) # underestimation of complexity
+  print("Max Discrepancy Patterns")
+  print(tail(inc_disc, 10)$Group.1) # pattern numbers where
+                                    # complexity is overestimated,
+                                    # ie, discrepancy is the largest
+  print("Min Discrepancy Patterns")
+  print(head(inc_disc, 10)$Group.1)  # patterns numbers where
+                                    # complexity is underestimated,
+                                    # ie, discrepancy is the smallest
 }
 
 ############### BEAUTY MODELS ###############
@@ -253,8 +292,11 @@ all_models_complexity <- list(
   f2 <- lmer(fullformula, data = data_train_fold2)
   f3 <- lmer(fullformula, data = data_train_fold3)
   f <- lmer(fullformula, data = data_train_fold1)
-  # add disorder to data
-  data$disorder_1 <- my_scale((abs(fixef(f)["asymm"]) * data$asymm) + (abs(fixef(f)["entropy"]) * data$entropy))
+  
+  # add disorder to data - we have 3 versions of disorder to compare  the 3 different entropies
+
+  data$disorder_1 <- my_scale((abs(fixef(f)["asymm"]) *
+  data$asymm) + (abs(fixef(f)["entropy"]) * data$entropy)) # disorder_1 uses entropy 
 
   formula <- "complexity_rating + asymm + mean_entropy + (1 | subject)"
   fullformula <- paste("beauty_rating ~", formula)
@@ -262,7 +304,8 @@ all_models_complexity <- list(
   f2 <- lmer(fullformula, data = data_train_fold2)
   f3 <- lmer(fullformula, data = data_train_fold3)
   f <- lmer(fullformula, data = data_train_fold1)
-  data$disorder_2 <- my_scale((abs(fixef(f)["asymm"]) * data$asymm) + (abs(fixef(f)["mean_entropy"]) * data$mean_entropy))
+  data$disorder_2 <- my_scale((abs(fixef(f)["asymm"]) *
+  data$asymm) + (abs(fixef(f)["mean_entropy"]) * data$mean_entropy)) # disorder_2 uses mean_entropy 
 
   formula <- "complexity_rating + asymm + entropy_of_means + (1 | subject)"
   fullformula <- paste("beauty_rating ~", formula)
@@ -270,7 +313,9 @@ all_models_complexity <- list(
   f2 <- lmer(fullformula, data = data_train_fold2)
   f3 <- lmer(fullformula, data = data_train_fold3)
   f <- lmer(fullformula, data = data_train_fold1)
-  data$disorder <- my_scale((abs(fixef(f)["asymm"]) * data$asymm) + (abs(fixef(f)["entropy_of_means"]) * data$entropy_of_means))
+  data$disorder <- my_scale((abs(fixef(f)["asymm"]) *
+  data$asymm) + (abs(fixef(f)["entropy_of_means"]) * data$entropy_of_means)) # disorder uses entropy_of_means
+
 
   # recreate the folds
   data_test_fold1 <- data %>%
@@ -319,39 +364,50 @@ all_models_beauty <- list(
   "LSC + intricacy_4 + asymm + entropy + (1 | subject)",
   "LSC + intricacy_4 + disorder + (1 | subject)",
   "LSC + intricacy_4 + disorder + (disorder | subject)",
-  "LSC + intricacy_4 + disorder + (LSC + intricacy_4):disorder + (disorder | subject)",
+  "LSC + intricacy_4 + disorder + 
+  (LSC + intricacy_4):disorder + (disorder | subject)",
   "trial + (1 | subject)",
   "complexity_rating * disorder + trial + (disorder | subject)",
   "previous_beauty_rating + (trial | subject)",
-  "complexity_rating * disorder + previous_beauty_rating + (disorder | subject)",
+  "complexity_rating * disorder + 
+  previous_beauty_rating + (disorder | subject)",
   "complexity_rating * trial + (1 | subject)"
 )
 
 {
-  df <- data.frame(matrix(ncol = 13, nrow = 0, dimnames = list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var", "Rsq train mean", "Rsq train var", "Rsq test mean", "Rsq test var", "RMSE train mean", "RMSE train var", "RMSE test mean", "RMSE test var"))))
+  df <- data.frame(matrix(ncol = 13, nrow = 0, dimnames = 
+  list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var", "Rsq train mean",
+  "Rsq train var", "Rsq test mean", "Rsq test var",
+  "RMSE train mean", "RMSE train var", "RMSE test mean", "RMSE test var"))))
 
   id <- 0
   # Analyze a subset of the beauty models - Table 2
-  for (formula in models_in_paper_beauty) { # can also run for all_models instead (replace models_in_paper_beauty by all_models_beauty)
+  # Save all results to model_fits/Table_2A_models_beauty.csv
+
+  for (formula in models_in_paper_beauty) {
+    # can also run for all_models instead
+    # by replacing models_in_paper_beauty by all_models_beauty
     id <- id + 1
     fullformula <- paste("beauty_rating ~", formula)
-    f1 <- lmer(fullformula, data = data_train_fold1, control = lmerControl(optimizer = "bobyqa"))
-    f2 <- lmer(fullformula, data = data_train_fold2, control = lmerControl(optimizer = "bobyqa"))
-    f3 <- lmer(fullformula, data = data_train_fold3, control = lmerControl(optimizer = "bobyqa"))
-    # Uncomment the next 3 lines to print summaries
-    # print(summary(f1))
-    # print(summary(f2))
-    # print(summary(f3))
-    print(noquote(fullformula))
+    f1 <- lmer(fullformula, data = data_train_fold1,
+    control = lmerControl(optimizer = "bobyqa"))
+    f2 <- lmer(fullformula, data = data_train_fold2,
+    control = lmerControl(optimizer = "bobyqa"))
+    f3 <- lmer(fullformula, data = data_train_fold3,
+    control = lmerControl(optimizer = "bobyqa"))
 
-    metrics <- modelanalysis("beauty", num_folds, list(f1, f2, f3), list(data_train_fold1, data_train_fold2, data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3), FALSE, TRUE, FALSE)
+    metrics <- modelanalysis("beauty", num_folds,
+    list(f1, f2, f3), list(data_train_fold1, data_train_fold2,
+    data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3),
+    FALSE, FALSE, fullformula) # set sencond last param to TRUE for printing
     df[nrow(df) + 1, ] <- c(id, noquote(fullformula), c(metrics))
   }
 
-  write.csv(df, "model_fits/models_beauty.csv", row.names = FALSE)
+  write.csv(df, "model_fits/Table_2A_models_beauty.csv", row.names = FALSE)
 }
 
-# Print performance of best model and make plots (train, test and random effects)
+# Print performance of best model and make plots
+# of train, test and random effects
 # Figure 9, Figure AIII.7(B)
 # Plots saved to ./plots/
 {
@@ -363,73 +419,104 @@ all_models_beauty <- list(
   f <- lmer(bestfullformula, data = data_train_fold1)
 
   # Plots data vs predictions on train and test data - Figure 8
-  metrics <- modelanalysis("beauty", num_folds, list(f1, f2, f3), list(data_train_fold1, data_train_fold2, data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3), FALSE, FALSE, TRUE)
+  metrics <- modelanalysis("beauty", num_folds,
+  list(f1, f2, f3), list(data_train_fold1, data_train_fold2,
+  data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3),
+  FALSE, TRUE)
 
-  # Plots random effects - Figure AIII.5(b)
+  # Plots random effects - Figure AIII.7(b)
   ggCaterpillar(ranef(f, condVar = TRUE))
-  ggsave("plots/random_effects_beauty.pdf")
+  ggsave("plots/Figure_AIII_7B_random_effects_beauty.pdf")
 }
 
-# Print fixed effects - Table 2B
+# Save fixed effects - Table 2B
 {
-  fixef(f)
+  write.csv(fixef(f), file = "model_fits/Table_2B_fixed_effects_beauty.csv")
 }
 
 # Create interaction plot
 # Figure 10
 # Plot saved to ./plots/
 {
-  pdf(file = "plots/complexity_order_interaction_for_beauty.pdf", width = 10, height = 10)
-  par(mar = c(5, 6, 4, 1) + .1)
-  interact_plot(f,
-    pred = disorder, modx = complexity_rating, interval = TRUE, x.label = "Disorder", y.label = "Beauty Ratings",
-    main.title = "Interaction Plot for Disorder x Complexity Ratings", legend.main = "Complexity Ratings",
-    colors = "seagreen"
+  p <- interact_plot(f,
+      pred = disorder, modx = complexity_rating, interval = TRUE,
+      x.label = "Disorder", y.label = "Beauty Ratings",
+      main.title = "Interaction Plot for Disorder x Complexity Ratings",
+      legend.main = "Complexity Ratings", colors = "seagreen"
   ) + theme(
-    plot.title = element_text(family = "serif", size = 16),
-    axis.title = element_text(family = "serif", size = 20),
-    axis.text = element_text(family = "serif", size = 14),
-    legend.text = element_text(family = "serif", size = 15),
-    legend.title = element_text(family = "serif", size = 18),
-    strip.text = element_text(family = "serif")
+      plot.title = element_text(family = "serif", size = 16),
+      axis.title = element_text(family = "serif", size = 20),
+      axis.text = element_text(family = "serif", size = 14),
+      legend.text = element_text(family = "serif", size = 15),
+      legend.title = element_text(family = "serif", size = 18),
+      strip.text = element_text(family = "serif")
   )
-}
 
-# Save interaction plot
-{
-  dev.off()
+  # Save the plot
+  ggsave(filename = "plots/Figure_10_complexity_order_interaction_for_beauty.pdf", plot = p, width = 10, height = 10, units = "in")
 }
 
 # Get patterns at interaction extremes for Figure 10
 {
-  data$complexity_rating_bin <- findInterval(data$complexity_rating, c(-1, 0, 1, 2))
+  data$complexity_rating_bin <-
+  findInterval(data$complexity_rating, c(-1, 0, 1, 2))
   # bins: 0, 1, 2, 3, 4
-  data$beauty_rating_bin <- findInterval(data$beauty_rating, c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2))
-  data$disorder_bin <- findInterval(data$disorder, c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5))
+  data$beauty_rating_bin <-
+  findInterval(data$beauty_rating, c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2))
+  data$disorder_bin <-
+  findInterval(data$disorder, c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5))
 
   mean_pattern <- aggregate(data, list(data$pattern), mean)
   mean_pattern_bydisorder <- mean_pattern[order(-mean_pattern$disorder), ]
 
-  highest_disorder <- mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin >= 8, ]
-  # max disorder patterns: 120, 109, 58
+  highest_disorder <-
+  mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin >= 8, ]
+  # max disorder patterns
 
-  mean_pattern_highdisorder_bycomplexity <- highest_disorder[order(highest_disorder$complexity_rating), ]
+  mean_pattern_highdisorder_bycomplexity <-
+  highest_disorder[order(highest_disorder$complexity_rating), ]
 
-  print(head(mean_pattern_highdisorder_bycomplexity, 3)$Group.1) # high disorder, low CR
-  cat(mean_pattern_highdisorder_bycomplexity[round(nrow(mean_pattern_highdisorder_bycomplexity) / 2) - 1, ]$Group.1, mean_pattern_highdisorder_bycomplexity[round(nrow(mean_pattern_highdisorder_bycomplexity) / 2), ]$Group.1, mean_pattern_highdisorder_bycomplexity[round(nrow(mean_pattern_highdisorder_bycomplexity) / 2) + 1, ]$Group.1) # low disorder, medium CR
-  print(tail(mean_pattern_highdisorder_bycomplexity, 3)$Group.1) # high disorder, high CR
+  print(head(mean_pattern_highdisorder_bycomplexity, 3)$Group.1)
+  # high disorder, low CR
+
+  cat(mean_pattern_highdisorder_bycomplexity
+  [round(nrow(mean_pattern_highdisorder_bycomplexity) / 2) - 1, ]$Group.1,
+  mean_pattern_highdisorder_bycomplexity
+  [round(nrow(mean_pattern_highdisorder_bycomplexity) / 2), ]$Group.1,
+  mean_pattern_highdisorder_bycomplexity
+  [round(nrow(mean_pattern_highdisorder_bycomplexity) / 2) + 1, ]$Group.1)
+  # low disorder, medium CR
+
+  print(tail(mean_pattern_highdisorder_bycomplexity, 3)$Group.1)
+  # high disorder, high CR
+
+  # summary:
   # high disorder, low CR -     1, 167, 58
   # high disorder, medium CR -  8, 70, 67
   # high disorder, high CR -    131, 15, 195
 
-  lowest_disorder <- mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin <= 2, ]
-  # min disorder patterns: 163 55 178 4 23 87 174 89 158
+  lowest_disorder <- 
+  mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin <= 2, ]
+  # min disorder patterns
 
-  mean_pattern_lowdisorder_bycomplexity <- lowest_disorder[order(lowest_disorder$complexity_rating), ]
+  mean_pattern_lowdisorder_bycomplexity <-
+  lowest_disorder[order(lowest_disorder$complexity_rating), ]
 
-  print(head(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1) # low disorder, low CR
-  cat(mean_pattern_lowdisorder_bycomplexity[round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2) - 1, ]$Group.1, mean_pattern_lowdisorder_bycomplexity[round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2), ]$Group.1, mean_pattern_lowdisorder_bycomplexity[round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2) + 1, ]$Group.1) # low disorder, medium CR
-  print(tail(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1) # low disorder, high CR
+  print(head(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1)
+  # low disorder, low CR
+
+  cat(mean_pattern_lowdisorder_bycomplexity
+  [round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2) - 1, ]$Group.1,
+  mean_pattern_lowdisorder_bycomplexity
+  [round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2), ]$Group.1,
+  mean_pattern_lowdisorder_bycomplexity
+  [round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2) + 1, ]$Group.1)
+  # low disorder, medium CR
+
+  print(tail(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1)
+  # low disorder, high CR
+
+  # summary:
   # low disorder, low CR -     163, 55, 4
   # low disorder, medium CR -  199, 132, 133
   # low disorder, high CR -    89, 87, 159
@@ -440,30 +527,40 @@ all_models_beauty <- list(
 # Run porcess.R
 # Requires process.R from Process running in the background
 {
-  process(data = data_train_fold2, y = "beauty_rating", x = "obj_comp_withrandint_withrandslopes", m = "complexity_rating", w = "disorder", model = 15, center = 2, moments = 1, modelbt = 1, boot = 10000, seed = 20, jn = 1)
+  process(data = data_train_fold2, y = "beauty_rating",
+  x = "obj_comp_withrandint_withrandslopes", m = "complexity_rating",
+  w = "disorder", model = 15, center = 2, moments = 1, modelbt = 1,
+  boot = 10000, seed = 20, jn = 1)
 }
 
 # Mediation analysis - Table 4
 {
-  model.0 <- lmer(beauty_rating ~ obj_comp + disorder + (disorder | subject), data = data_test_fold1)
-  model.M <- lmer(complexity_rating ~ obj_comp + (intricacy_4 | subject), data = data_test_fold1)
-  model.Y <- lmer(beauty_rating ~ complexity_rating + obj_comp + disorder + (disorder | subject), data = data_test_fold1)
+  model.0 <- lmer(beauty_rating ~ obj_comp +
+  disorder + (disorder | subject), data = data_test_fold1)
+  model.M <- lmer(complexity_rating ~ obj_comp +
+  (intricacy_4 | subject), data = data_test_fold1)
+  model.Y <- lmer(beauty_rating ~ complexity_rating + obj_comp +
+  disorder + (disorder | subject), data = data_test_fold1)
 
   results <- mediate(model.M, model.Y,
     treat = "obj_comp", mediator = "complexity_rating",
     boot = FALSE, sims = 500
   )
-  print(summary(results))
+
+  capture.output(summary(results), file = "model_fits/Table_4_mediationanalysis.txt")
 }
 
 # Get model significances - Table 3
 {
   library(lmerTest)
-  model.0 <- lmer(beauty_rating ~ obj_comp + disorder + (disorder | subject), data = data_test_fold1)
-  model.M <- lmer(complexity_rating ~ obj_comp + (intricacy_4 | subject), data = data_test_fold1)
-  model.Y <- lmer(beauty_rating ~ complexity_rating + obj_comp + disorder + (disorder | subject), data = data_test_fold1)
-  print(summary(model.0))
-  print(summary(model.M))
-  print(summary(model.Y))
-}
+  model.0 <- lmer(beauty_rating ~ obj_comp +
+  disorder + (disorder | subject), data = data_test_fold1)
+  model.M <- lmer(complexity_rating ~ obj_comp +
+  (intricacy_4 | subject), data = data_test_fold1)
+  model.Y <- lmer(beauty_rating ~ complexity_rating + obj_comp +
+  disorder + (disorder | subject), data = data_test_fold1)
 
+  capture.output(summary(model.0), file = "model_fits/Table_3_mediationanalysis.txt")
+  capture.output(summary(model.M), file = "model_fits/Table_3_mediationanalysis.txt", append = TRUE)
+  capture.output(summary(model.Y), file = "model_fits/Table_3_mediationanalysis.txt", append = TRUE)
+}

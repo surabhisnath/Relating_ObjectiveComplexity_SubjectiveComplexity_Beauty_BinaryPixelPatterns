@@ -25,8 +25,8 @@ def calculate_entropy(gridorflatgrid, grid_size):
     if len(uniq) == 1:
         return 0
     
-    p1 = cnts[0]/(cnts[0] + cnts[1])        # fraction of white pixels
-    p2 = cnts[1]/(cnts[0] + cnts[1])        # fraction of black pixels
+    p1 = cnts[1]/(cnts[0] + cnts[1])        # fraction of black pixels
+    p2 = cnts[0]/(cnts[0] + cnts[1])        # fraction of white pixels
 
     entropy = -1 * (p1 * math.log(p1,2) + p2 * math.log(p2,2))      # entropy equation (Eq. 1)
     return entropy

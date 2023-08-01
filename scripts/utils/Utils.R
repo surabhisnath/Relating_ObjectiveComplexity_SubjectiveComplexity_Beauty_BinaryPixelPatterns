@@ -54,7 +54,7 @@ ggCaterpillar <- function(re, QQ = FALSE, likeDotplot = TRUE, detailedFacetLabs 
 }
 
 # Analysis function
-modelanalysis <- function(dependent_var, num_folds, models, data_train_folds, data_test_folds, vif, print, plot) {
+modelanalysis <- function(dependent_var, num_folds, models, data_train_folds, data_test_folds, to_print, to_plot, fullformula) {
   # This function performs all analyses on the model and returns all performance metrics
   # Arguements:
   # dependent_var: string: either "complexity" or "beauty"
@@ -62,9 +62,8 @@ modelanalysis <- function(dependent_var, num_folds, models, data_train_folds, da
   # models - array of lmer models on each fold
   # data_train_folds - ground truth train data for each fold
   # data_test_folds - ground truth test data for each fold
-  # vif - logical - indicates if variance inflation factors need to be printed (TRUE means yes) - if more than 2 variables, vif = TRUE
-  # print - logical - indicates if metrics need to be printed (TRUE means yes)
-  # plot - logical - indicates if plots should be made (TRUE means yes)
+  # to_print - logical - indicates if metrics need to be printed (TRUE means yes)
+  # to_plot - logical - indicates if plots should be made (TRUE means yes)
   VIFs <- numeric(num_folds)
   AICs <- numeric(num_folds)
   BICs <- numeric(num_folds)
@@ -73,12 +72,8 @@ modelanalysis <- function(dependent_var, num_folds, models, data_train_folds, da
   RMSEtrains <- numeric(num_folds)
   RMSEtests <- numeric(num_folds)
 
-  for (x in 1:num_folds)
-  {
-    # if (vif)
-    # {
-    #   VIFs[x] <- vif(models[x])
-    # }
+  for (x in 1:num_folds) {
+    
     AICs[x] <- AIC(models[[x]])
     BICs[x] <- BIC(models[[x]])
 
@@ -95,49 +90,45 @@ modelanalysis <- function(dependent_var, num_folds, models, data_train_folds, da
     }
   }
 
-  meanAIC <- mean(AICs)
-  meanBIC <- mean(BICs)
-  varAICBIC <- var(AICs)
-  meanrsqtrain <- mean(rsqtrains)
-  varrsqtrain <- var(rsqtrains)
-  meanrsqtest <- mean(rsqtests)
-  varrsqtest <- var(rsqtests)
-  meanRMSEtrain <- mean(RMSEtrains)
-  varRMSEtrain <- var(RMSEtrains)
-  meanRMSEtest <- mean(RMSEtests)
-  varRMSEtest <- var(RMSEtests)
+  mean_aic <- mean(AICs)
+  mean_bic <- mean(BICs)
+  var_aic_bic <- var(AICs)
+  mean_rsq_train <- mean(rsqtrains)
+  var_rsq_train <- var(rsqtrains)
+  mean_rsq_test <- mean(rsqtests)
+  var_rsq_test <- var(rsqtests)
+  mean_rmse_train <- mean(RMSEtrains)
+  var_rmse_train <- var(RMSEtrains)
+  mean_rmse_test <- mean(RMSEtests)
+  var_rmse_test <- var(RMSEtests)
 
-  if (print) {
-    if (vif) {
-      for (x in 1:num_folds)
-      {
-        print(VIFs[x])
-      }
-    }
+  if (to_print) {
 
-    print(noquote(paste("Mean AIC =", meanAIC)))
-    print(noquote(paste("Mean BIC =", meanBIC)))
-    print(noquote(paste("Var AIC, BIC =", varAICBIC)))
+    print(noquote(fullformula))
+    
+    print(noquote(paste("Mean AIC =", mean_aic)))
+    print(noquote(paste("Mean BIC =", mean_bic)))
+    print(noquote(paste("Var AIC, BIC =", var_aic_bic)))
 
-    print(noquote(paste("Mean R^2 train =", meanrsqtrain)))
-    print(noquote(paste("Var R^2 train =", varrsqtrain)))
-    print(noquote(paste("Mean R^2 test =", meanrsqtest)))
-    print(noquote(paste("Var R^2 test =", varrsqtest)))
+    print(noquote(paste("Mean R^2 train =", mean_rsq_train)))
+    print(noquote(paste("Var R^2 train =", var_rsq_train)))
+    print(noquote(paste("Mean R^2 test =", mean_rsq_test)))
+    print(noquote(paste("Var R^2 test =", var_rsq_test)))
 
-    print(noquote(paste("Mean train RMSE =", meanRMSEtrain)))
-    print(noquote(paste("Var train RMSE =", varRMSEtrain)))
-    print(noquote(paste("Mean test RMSE =", meanRMSEtest)))
-    print(noquote(paste("Var test RMSE =", varRMSEtest)))
+    print(noquote(paste("Mean train RMSE =", mean_rmse_train)))
+    print(noquote(paste("Var train RMSE =", var_rmse_train)))
+    print(noquote(paste("Mean test RMSE =", mean_rmse_test)))
+    print(noquote(paste("Var test RMSE =", var_rmse_test)))
   }
 
-  if (plot) # Make plot if plot is TRUE
+  if (to_plot) # Make plot if plot is TRUE
     {
       make_plots(dependent_var, models[[1]], data_train_folds[[1]], data_test_folds[[1]])
     }
 
-  metrics1 <- c(meanAIC, meanBIC, varAICBIC)
+  metrics1 <- c(mean_aic, mean_bic, var_aic_bic)
   metrics1 <- round(metrics1, digits = 1)
-  metrics2 <- c(meanrsqtrain, varrsqtrain, meanrsqtest, varrsqtest, meanRMSEtrain, varRMSEtrain, meanRMSEtest, varRMSEtest)
+  metrics2 <- c(mean_rsq_train, var_rsq_train, mean_rsq_test, var_rsq_test, mean_rmse_train, var_rmse_train, mean_rmse_test, var_rmse_test)
   metrics2 <- signif(metrics2, digits = 2)
 
   # returns all metrics
@@ -150,9 +141,9 @@ make_plots <- function(dependent_var, model, data_train_fold, data_test_fold) {
   if (dependent_var == "complexity") {
     # Save plot of complexity ratings vs predictions (on both train and test data)
 
-    pdf(file = "plots/complexity_train.pdf", width = 10, height = 10, family = "Times")
+    pdf(file = "plots/Figure_7A_complexity_train.pdf", width = 10, height = 10, family = "Times")
     par(mar = c(5, 6, 4, 1) + .1)
-    p1 <- plot(predict(model, data_train_fold), data_train_fold$complexity_rating, xlab = "Predictions on training data", ylab = "Complexity ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = F)
+    p1 <- plot(predict(model, data_train_fold), data_train_fold$complexity_rating, xlab = "Predictions on training data", ylab = "Complexity ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = FALSE)
     axis(1, cex.axis = 2)
     axis(2, cex.axis = 2)
     p1 + theme(
@@ -163,9 +154,9 @@ make_plots <- function(dependent_var, model, data_train_fold, data_test_fold) {
     abline(a = 0, b = 1, col = "blue", lwd = 3, lty = 2)
     dev.off()
 
-    pdf(file = "plots/complexity_test.pdf", width = 10, height = 10, family = "Times")
+    pdf(file = "plots/Figure_7B_complexity_test.pdf", width = 10, height = 10, family = "Times")
     par(mar = c(5, 6, 4, 1) + .1)
-    p2 <- plot(predict(model, data_test_fold), data_test_fold$complexity_rating, xlab = "Predictions on test data", ylab = "Complexity ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = F)
+    p2 <- plot(predict(model, data_test_fold), data_test_fold$complexity_rating, xlab = "Predictions on test data", ylab = "Complexity ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = FALSE)
     axis(1, cex.axis = 2)
     axis(2, cex.axis = 2)
     p2 + theme(
@@ -178,9 +169,9 @@ make_plots <- function(dependent_var, model, data_train_fold, data_test_fold) {
   } else if (dependent_var == "beauty") {
     # Save plot of beauty ratings vs predictions (on both train and test data)
 
-    pdf(file = "plots/beauty_train.pdf", width = 10, height = 10, family = "Times")
+    pdf(file = "plots/Figure_9A_beauty_train.pdf", width = 10, height = 10, family = "Times")
     par(mar = c(5, 6, 4, 1) + .1)
-    p1 <- plot(predict(model, data_train_fold), data_train_fold$beauty_rating, xlab = "Predictions on training data", ylab = "Beauty ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = F)
+    p1 <- plot(predict(model, data_train_fold), data_train_fold$beauty_rating, xlab = "Predictions on training data", ylab = "Beauty ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = FALSE)
     axis(1, cex.axis = 2)
     axis(2, cex.axis = 2)
     p1 + theme(
@@ -191,9 +182,9 @@ make_plots <- function(dependent_var, model, data_train_fold, data_test_fold) {
     abline(a = 0, b = 1, col = "blue", lwd = 3, lty = 2)
     dev.off()
 
-    pdf(file = "plots/beauty_test.pdf", width = 10, height = 10, family = "Times")
+    pdf(file = "plots/Figure_9B_beauty_test.pdf", width = 10, height = 10, family = "Times")
     par(mar = c(5, 6, 4, 1) + .1)
-    p2 <- plot(predict(model, data_test_fold), data_test_fold$beauty_rating, xlab = "Predictions on test data", ylab = "Beauty ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = F)
+    p2 <- plot(predict(model, data_test_fold), data_test_fold$beauty_rating, xlab = "Predictions on test data", ylab = "Beauty ratings", cex.axis = 3, cex.lab = 3, col = rgb(red = 0, green = 0, blue = 0, alpha = 0.3), pch = 16, axes = FALSE)
     axis(1, cex.axis = 2)
     axis(2, cex.axis = 2)
     p2 + theme(
@@ -207,12 +198,11 @@ make_plots <- function(dependent_var, model, data_train_fold, data_test_fold) {
 }
 
 # Only for Figure AIII.2
-plot_model <- function(model, path) {
+plot_model <- function(model, path, data_train_fold1, data_test_fold1) {
   # Convert data to data frames
   train_df <- data.frame(predictions = predict(model, data_train_fold1), complexity_rating = data_train_fold1$complexity_rating)
   test_df <- data.frame(predictions = predict(model, data_test_fold1), complexity_rating = data_test_fold1$complexity_rating)
 
-  # Create the plot with training and test data
   # Create the plot with training and test data
   ggplot(mapping = aes(x = predictions, y = complexity_rating)) +
     geom_point(data = train_df, aes(color = "Training"), alpha = 0.5, size = 4) +
@@ -228,11 +218,8 @@ plot_model <- function(model, path) {
       legend.title = element_text(family = "serif", size = 28),
       legend.text = element_text(family = "serif", size = 28)
     ) +
-    # scale_color_manual(name = "", values = c("Training" = "darkblue", "Test" = "cyan2"))
-    # scale_color_manual(name = "", values = c("Training" = "darkgreen", "Test" = "darkolivegreen2"))
     scale_color_manual(name = "", values = c("Training" = "darkred", "Test" = "darksalmon"))
+  
   # Save the plot to a PDF file
   ggsave(paste("plots/", path), width = 10, height = 10)
 }
-
-

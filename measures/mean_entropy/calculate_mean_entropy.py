@@ -1,6 +1,5 @@
 author = 'Surabhi S Nath'
 import numpy as np
-import math
 import sys
 sys.path.insert(1, '../entropy/')
 from calculate_entropy import *

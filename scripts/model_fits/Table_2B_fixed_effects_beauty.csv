@@ -1,0 +1,5 @@
+"","x"
+"(Intercept)",-0.028820668835334
+"complexity_rating",0.269675227760065
+"disorder",-0.573578502744653
+"complexity_rating:disorder",-0.111501206003773
