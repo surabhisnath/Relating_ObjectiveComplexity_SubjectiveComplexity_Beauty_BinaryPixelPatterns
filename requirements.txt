@@ -1,11 +1,12 @@
 imageio==2.19.3
 matplotlib==3.5.2
-numpy==1.21.5
+numpy>=1.22.3; platform_system=="Windows"
+numpy==1.21.5; platform_system!="Windows"
 pybdm==0.1.0
 pandas==1.4.4
 statsmodels
 seaborn
 scipy
-sklearn
+scikit-learn
 gmr
 jupyterlab
