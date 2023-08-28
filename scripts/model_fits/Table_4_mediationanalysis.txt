@@ -1,0 +1,24 @@
+
+Causal Mediation Analysis 
+
+Quasi-Bayesian Confidence Intervals
+
+Mediator Groups: subject 
+
+Outcome Groups: subject 
+
+Output Based on Overall Averages Across Groups 
+
+               Estimate 95% CI Lower 95% CI Upper p-value    
+ACME             0.3090       0.2210         0.41  <2e-16 ***
+ADE              0.0829      -0.0173         0.19    0.12    
+Total Effect     0.3919       0.2823         0.50  <2e-16 ***
+Prop. Mediated   0.7896       0.5732         1.06  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Sample Size Used: 1560 
+
+
+Simulations: 500 
+

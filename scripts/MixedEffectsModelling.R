@@ -17,7 +17,7 @@
   library(mediation)
   source("utils/Utils.R")
 
-  # Set seed
+  # Set seed 
   set.seed(20) # Seed set randomly for reproducibility
 }
 
@@ -55,10 +55,9 @@
   data$local_asymm <- my_scale(data$local_asymm)
   data$Hasymm <- my_scale(data$Hasymm)
   data$Vasymm <- my_scale(data$Vasymm)
-  data$asymm <- my_scale((data$local_asymm + data$Hasymm + data$Vasymm) / 3)
+  data$asymm <- my_scale((data$Hasymm + data$Vasymm) / 2)
   data$entropy <- my_scale(data$entropy)
   data$mean_entropy <- my_scale(data$mean_entropy)
-  data$entropy_of_means <- my_scale(data$entropy_of_means)
   data$densitysq <- my_scale(data$density^2)
   data$density <- my_scale(data$density)
   data$neighbourhood_size <- factor(data$neighbourhood_size)
@@ -107,7 +106,6 @@ models_in_paper_complexity <- list(
   "LSC + density + (1 | subject)",
   "LSC + entropy + (1 | subject)",
   "LSC + mean_entropy + (1 | subject)",
-  "LSC + entropy_of_means + (1 | subject)",
   "LSC + asymm + (1 | subject)",
   "LSC + intricacy_4 + (1 | subject)",
   "LSC * intricacy_4 + (1 | subject)",
@@ -126,7 +124,6 @@ all_models_complexity <- list(
   "density + (1 | subject)",
   "entropy + (1 | subject)",
   "mean_entropy + (1 | subject)",
-  "entropy_of_means + (1 | subject)",
   "LSC + (1 | subject)",
   "KC + (1 | subject)",
   "asymm + (1 | subject)",
@@ -136,13 +133,11 @@ all_models_complexity <- list(
   "LSC + density + (1 | subject)",
   "LSC + entropy + (1 | subject)",
   "LSC + mean_entropy + (1 | subject)",
-  "LSC + entropy_of_means + (1 | subject)",
   "LSC + asymm + (1 | subject)",
   "LSC + intricacy_4 + (1 | subject)",
   "LSC + intricacy_8 + (1 | subject)",
   "LSC + quadtree + (1 | subject)",
   "LSC + intricacy_4 + intricacy_8 + (1 | subject)",
-  "LSC + entropy_of_means + density + (1 | subject)",
   "LSC + intricacy_4 + LSC:intricacy_4 + (1 | subject)",
   "LSC + intricacy_4 + (LSC | subject)",
   "LSC + intricacy_4 + (intricacy_4 | subject)",
@@ -156,7 +151,7 @@ all_models_complexity <- list(
   "neighbourhood_size + tot_outertot + IC + (1 | subject)",
   "trial + (1 | subject)",
   "LSC + intricacy_4 + trial + ((LSC + intricacy_4) | subject)",
-  "previous_complexity_rating + (trial | subject)",
+  "previous_complexity_rating + (1 | subject)",
   "LSC + intricacy_4 + previous_complexity_rating + 
   ((LSC + intricacy_4) | subject)"
 )
@@ -247,7 +242,7 @@ all_models_complexity <- list(
   data_train_fold1, data_test_fold1)
 }
 
-# Write objective complexity column onto data for mediation analysis (ref line 508)
+# Write objective complexity, with and without random intercepts/slopes as columns onto data for mediation analysis (performed below)
 {
   data$obj_comp <- (fixef(f)["LSC"] * data$LSC) +
   (fixef(f)["intricacy_4"] * data$intricacy_4) + fixef(f)["(Intercept)"]
@@ -270,16 +265,18 @@ all_models_complexity <- list(
 {
   data$discrepancy <- my_scale(data$obj_comp_withrandint_withrandslopes
   - data$complexity_rating)
-  mean_pattern <- aggregate(data, list(data$pattern), mean)
-  inc_disc <- mean_pattern[order(mean_pattern$discrepancy), ]
-  print("Max Discrepancy Patterns")
-  print(tail(inc_disc, 10)$Group.1) # pattern numbers where
+  mean_pattern_disc <- aggregate(data$discrepancy, list(data$pattern), mean)
+  inc_disc <- mean_pattern_disc[order(mean_pattern_disc$x), ]
+  print("Max Discrepancy Patterns:")
+  print(tail(inc_disc, 8)$Group.1) # pattern numbers where
                                     # complexity is overestimated,
                                     # ie, discrepancy is the largest
-  print("Min Discrepancy Patterns")
-  print(head(inc_disc, 10)$Group.1)  # patterns numbers where
+  print(tail(inc_disc, 8)$x)
+  print("Min Discrepancy Patterns:")
+  print(head(inc_disc, 8)$Group.1)  # patterns numbers where
                                     # complexity is underestimated,
                                     # ie, discrepancy is the smallest
+  print(head(inc_disc, 8)$x)
 }
 
 ############### BEAUTY MODELS ###############
@@ -288,34 +285,28 @@ all_models_complexity <- list(
 {
   formula <- "complexity_rating + asymm + entropy + (1 | subject)"
   fullformula <- paste("beauty_rating ~", formula)
-  f1 <- lmer(fullformula, data = data_train_fold1)
-  f2 <- lmer(fullformula, data = data_train_fold2)
-  f3 <- lmer(fullformula, data = data_train_fold3)
   f <- lmer(fullformula, data = data_train_fold1)
-  
-  # add disorder to data - we have 3 versions of disorder to compare  the 3 different entropies
-
-  data$disorder_1 <- my_scale((abs(fixef(f)["asymm"]) *
-  data$asymm) + (abs(fixef(f)["entropy"]) * data$entropy)) # disorder_1 uses entropy 
+  # add disorder (asymm + entropy) to data
+  data$disorder <- my_scale((abs(fixef(f)["asymm"]) *
+  data$asymm) + (abs(fixef(f)["entropy"]) * data$entropy))
 
   formula <- "complexity_rating + asymm + mean_entropy + (1 | subject)"
   fullformula <- paste("beauty_rating ~", formula)
-  f1 <- lmer(fullformula, data = data_train_fold1)
-  f2 <- lmer(fullformula, data = data_train_fold2)
-  f3 <- lmer(fullformula, data = data_train_fold3)
   f <- lmer(fullformula, data = data_train_fold1)
   data$disorder_2 <- my_scale((abs(fixef(f)["asymm"]) *
   data$asymm) + (abs(fixef(f)["mean_entropy"]) * data$mean_entropy)) # disorder_2 uses mean_entropy 
-
-  formula <- "complexity_rating + asymm + entropy_of_means + (1 | subject)"
+  
+  formula <- "complexity_rating + local_asymm + entropy + (1 | subject)"
   fullformula <- paste("beauty_rating ~", formula)
-  f1 <- lmer(fullformula, data = data_train_fold1)
-  f2 <- lmer(fullformula, data = data_train_fold2)
-  f3 <- lmer(fullformula, data = data_train_fold3)
   f <- lmer(fullformula, data = data_train_fold1)
-  data$disorder <- my_scale((abs(fixef(f)["asymm"]) *
-  data$asymm) + (abs(fixef(f)["entropy_of_means"]) * data$entropy_of_means)) # disorder uses entropy_of_means
-
+  data$disorder_3 <- my_scale((abs(fixef(f)["local_asymm"]) *
+  data$local_asymm) + (abs(fixef(f)["entropy"]) * data$entropy)) # disorder_3 uses local_asymm
+  
+  formula <- "complexity_rating + local_asymm + mean_entropy + (1 | subject)"
+  fullformula <- paste("beauty_rating ~", formula)
+  f <- lmer(fullformula, data = data_train_fold1)
+  data$disorder_4 <- my_scale((abs(fixef(f)["local_asymm"]) *
+  data$local_asymm) + (abs(fixef(f)["mean_entropy"]) * data$mean_entropy)) # disorder_4 uses both mean_entropy and local_asymm
 
   # recreate the folds
   data_test_fold1 <- data %>%
@@ -334,45 +325,56 @@ all_models_complexity <- list(
   data_train_fold3 <- setdiff(data, data_test_fold3)
 }
 
-# List of beauty models reported in the paper
-models_in_paper_beauty <- list(
-  "complexity_rating + (1 | subject)",
-  "complexity_rating + disorder + (1 | subject)",
-  "complexity_rating + disorder + (disorder | subject)",
-  "complexity_rating * disorder + (disorder | subject)",
-  "complexity_rating_sq + disorder + (1 | subject)",
-  "complexity_rating + complexity_rating_sq + disorder + (1 | subject)",
-  "LSC + intricacy_4 + disorder + (1 | subject)",
-  "LSC + intricacy_4 + disorder + (disorder | subject)",
-  "(LSC + intricacy_4) * disorder + (disorder | subject)"
-)
+{
+  # List of beauty models reported in the paper
+  models_in_paper_beauty <- list(
+    "complexity_rating + (1 | subject)",
+    "complexity_rating + disorder + (1 | subject)",
+    "complexity_rating + disorder + (disorder | subject)",
+    "complexity_rating + disorder + (complexity_rating | subject)",
+    "complexity_rating + disorder + ((disorder + complexity_rating) | subject)",
+    "complexity_rating * disorder + (1 | subject)",
+    "complexity_rating * disorder + ((complexity_rating + disorder) | subject)",
+    "complexity_rating_sq + disorder + (1 | subject)",
+    "complexity_rating + complexity_rating_sq + disorder + (1 | subject)",
+    "obj_comp + disorder + (1 | subject)",
+    "obj_comp + disorder + ((obj_comp + disorder) | subject)",
+    "obj_comp * disorder + ((obj_comp + disorder) | subject)"
+  )
 
-# List of all models of beauty - Table AIII.2
-all_models_beauty <- list(
-  "complexity_rating + (1 | subject)",
-  "complexity_rating + asymm + entropy + (1 | subject)",
-  "complexity_rating + asymm + entropy + (complexity_rating | subject)",
-  "complexity_rating + asymm + entropy + (asymm | subject)",
-  "complexity_rating + asymm + entropy + (entropy | subject)",
-  "complexity_rating + disorder + (1 | subject)",
-  "complexity_rating + disorder + (disorder | subject)",
-  "complexity_rating * disorder + (disorder | subject)",
-  "complexity_rating * disorder_1 + (disorder_1 | subject)",
-  "complexity_rating * disorder_2 + (disorder_2 | subject)",
-  "complexity_rating_sq + disorder + (1 | subject)",
-  "complexity_rating + complexity_rating_sq + disorder + (1 | subject)",
-  "LSC + intricacy_4 + asymm + entropy + (1 | subject)",
-  "LSC + intricacy_4 + disorder + (1 | subject)",
-  "LSC + intricacy_4 + disorder + (disorder | subject)",
-  "LSC + intricacy_4 + disorder + 
-  (LSC + intricacy_4):disorder + (disorder | subject)",
-  "trial + (1 | subject)",
-  "complexity_rating * disorder + trial + (disorder | subject)",
-  "previous_beauty_rating + (trial | subject)",
-  "complexity_rating * disorder + 
-  previous_beauty_rating + (disorder | subject)",
-  "complexity_rating * trial + (1 | subject)"
-)
+  # List of all models of beauty - Table AIII.2
+  all_models_beauty <- list(
+    "complexity_rating + (1 | subject)",
+    "complexity_rating + asymm + entropy + (1 | subject)",
+    "complexity_rating + asymm + mean_entropy + (1 | subject)",
+    "complexity_rating + disorder + (1 | subject)",
+    "complexity_rating + disorder + (disorder | subject)",
+    "complexity_rating + disorder + (complexity_rating | subject)",
+    "complexity_rating + disorder + ((complexity_rating + disorder) | subject)",
+    "complexity_rating * disorder + (1 | subject)",
+    "complexity_rating * disorder + (disorder | subject)",
+    "complexity_rating * disorder + (complexity_rating | subject)",
+    "complexity_rating * disorder + ((complexity_rating + disorder) | subject)",
+    "complexity_rating * disorder_2 + ((complexity_rating + disorder_2) | subject)",
+    "complexity_rating * disorder_3 + ((complexity_rating + disorder_3) | subject)",
+    "complexity_rating * disorder_4 + ((complexity_rating + disorder_4) | subject)",
+    "complexity_rating_sq + disorder + (1 | subject)",
+    "complexity_rating + complexity_rating_sq + disorder + (1 | subject)",
+    "LSC + intricacy_4 + asymm + entropy + (1 | subject)",
+    "LSC + intricacy_4 + disorder + (1 | subject)",
+    "obj_comp + asymm + entropy + (1 | subject)",
+    "obj_comp + disorder + (1 | subject)",
+    "obj_comp + disorder + (obj_comp | subject)",
+    "obj_comp + disorder + (disorder | subject)",
+    "obj_comp + disorder + ((obj_comp + disorder) | subject)",
+    "obj_comp * disorder + ((obj_comp + disorder) | subject)",
+    "trial + (1 | subject)",
+    "complexity_rating * disorder + trial + ((obj_comp + disorder) | subject)",
+    "previous_beauty_rating + (1 | subject)",
+    "complexity_rating * disorder + previous_beauty_rating + ((obj_comp + disorder) | subject)",
+    "complexity_rating * trial + (1 | subject)"
+  )
+}
 
 {
   df <- data.frame(matrix(ncol = 13, nrow = 0, dimnames = 
@@ -395,7 +397,10 @@ all_models_beauty <- list(
     control = lmerControl(optimizer = "bobyqa"))
     f3 <- lmer(fullformula, data = data_train_fold3,
     control = lmerControl(optimizer = "bobyqa"))
-
+    print(formula)
+    print(summary(f1))
+    print(summary(f2))
+    print(summary(f3))
     metrics <- modelanalysis("beauty", num_folds,
     list(f1, f2, f3), list(data_train_fold1, data_train_fold2,
     data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3),
@@ -411,7 +416,7 @@ all_models_beauty <- list(
 # Figure 9, Figure AIII.7(B)
 # Plots saved to ./plots/
 {
-  bestformula <- "complexity_rating * disorder + (disorder | subject)"
+  bestformula <- "complexity_rating * disorder + ((complexity_rating + disorder) | subject)"
   bestfullformula <- paste("beauty_rating ~", bestformula)
   f1 <- lmer(bestfullformula, data = data_train_fold1)
   f2 <- lmer(bestfullformula, data = data_train_fold2)
@@ -456,71 +461,35 @@ all_models_beauty <- list(
   ggsave(filename = "plots/Figure_10_complexity_order_interaction_for_beauty.pdf", plot = p, width = 10, height = 10, units = "in")
 }
 
+
 # Get patterns at interaction extremes for Figure 10
 {
-  data$complexity_rating_bin <-
-  findInterval(data$complexity_rating, c(-1, 0, 1, 2))
-  # bins: 0, 1, 2, 3, 4
-  data$beauty_rating_bin <-
-  findInterval(data$beauty_rating, c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2))
-  data$disorder_bin <-
-  findInterval(data$disorder, c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5))
-
   mean_pattern <- aggregate(data, list(data$pattern), mean)
-  mean_pattern_bydisorder <- mean_pattern[order(-mean_pattern$disorder), ]
+  mean_pattern_bydis <- mean_pattern[order(mean_pattern$disorder), ]
 
-  highest_disorder <-
-  mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin >= 8, ]
-  # max disorder patterns
+  # top 15 elements of mean_pattern_bydisorder
+  high_dis <- tail(mean_pattern_bydis, 15)
+  # bottom 15 elements of mean_pattern_dis
+  low_dis <- head(mean_pattern_bydis, 15)
+  
+  high_dis_by_comp <- high_dis[order(high_dis$complexity_rating), ]
+  low_dis_by_comp <- low_dis[order(low_dis$complexity_rating), ]
 
-  mean_pattern_highdisorder_bycomplexity <-
-  highest_disorder[order(highest_disorder$complexity_rating), ]
+  high_dis_low_comp <- head(high_dis_by_comp, 3)
+  high_dis_mid_comp <- high_dis_by_comp[7:9,]
+  high_dis_high_comp <- tail(high_dis_by_comp, 3)
+  low_dis_low_comp <- head(low_dis_by_comp, 3)
+  low_dis_mid_comp <- low_dis_by_comp[7:9,]
+  low_dis_high_comp <- tail(low_dis_by_comp, 3)
 
-  print(head(mean_pattern_highdisorder_bycomplexity, 3)$Group.1)
-  # high disorder, low CR
-
-  cat(mean_pattern_highdisorder_bycomplexity
-  [round(nrow(mean_pattern_highdisorder_bycomplexity) / 2) - 1, ]$Group.1,
-  mean_pattern_highdisorder_bycomplexity
-  [round(nrow(mean_pattern_highdisorder_bycomplexity) / 2), ]$Group.1,
-  mean_pattern_highdisorder_bycomplexity
-  [round(nrow(mean_pattern_highdisorder_bycomplexity) / 2) + 1, ]$Group.1)
-  # low disorder, medium CR
-
-  print(tail(mean_pattern_highdisorder_bycomplexity, 3)$Group.1)
-  # high disorder, high CR
-
-  # summary:
-  # high disorder, low CR -     1, 167, 58
-  # high disorder, medium CR -  8, 70, 67
-  # high disorder, high CR -    131, 15, 195
-
-  lowest_disorder <- 
-  mean_pattern_bydisorder[mean_pattern_bydisorder$disorder_bin <= 2, ]
-  # min disorder patterns
-
-  mean_pattern_lowdisorder_bycomplexity <-
-  lowest_disorder[order(lowest_disorder$complexity_rating), ]
-
-  print(head(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1)
-  # low disorder, low CR
-
-  cat(mean_pattern_lowdisorder_bycomplexity
-  [round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2) - 1, ]$Group.1,
-  mean_pattern_lowdisorder_bycomplexity
-  [round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2), ]$Group.1,
-  mean_pattern_lowdisorder_bycomplexity
-  [round(nrow(mean_pattern_lowdisorder_bycomplexity) / 2) + 1, ]$Group.1)
-  # low disorder, medium CR
-
-  print(tail(mean_pattern_lowdisorder_bycomplexity, 3)$Group.1)
-  # low disorder, high CR
-
-  # summary:
-  # low disorder, low CR -     163, 55, 4
-  # low disorder, medium CR -  199, 132, 133
-  # low disorder, high CR -    89, 87, 159
+  print(high_dis_low_comp$Group.1)
+  print(high_dis_mid_comp$Group.1)
+  print(high_dis_high_comp$Group.1)
+  print(low_dis_low_comp$Group.1)
+  print(low_dis_mid_comp$Group.1)
+  print(low_dis_high_comp$Group.1)
 }
+
 
 ############ MEDIATION ANALYSIS #############
 
@@ -536,11 +505,11 @@ all_models_beauty <- list(
 # Mediation analysis - Table 4
 {
   model.0 <- lmer(beauty_rating ~ obj_comp +
-  disorder + (disorder | subject), data = data_test_fold1)
+  disorder + ((obj_comp + disorder) | subject), data = data_test_fold1)
   model.M <- lmer(complexity_rating ~ obj_comp +
-  (intricacy_4 | subject), data = data_test_fold1)
+  (obj_comp | subject), data = data_test_fold1)
   model.Y <- lmer(beauty_rating ~ complexity_rating + obj_comp +
-  disorder + (disorder | subject), data = data_test_fold1)
+  disorder + ((complexity_rating + obj_comp + disorder) | subject), data = data_test_fold1)
 
   results <- mediate(model.M, model.Y,
     treat = "obj_comp", mediator = "complexity_rating",
@@ -554,11 +523,11 @@ all_models_beauty <- list(
 {
   library(lmerTest)
   model.0 <- lmer(beauty_rating ~ obj_comp +
-  disorder + (disorder | subject), data = data_test_fold1)
+  disorder + ((obj_comp + disorder) | subject), data = data_test_fold1)
   model.M <- lmer(complexity_rating ~ obj_comp +
-  (intricacy_4 | subject), data = data_test_fold1)
+  (obj_comp | subject), data = data_test_fold1)
   model.Y <- lmer(beauty_rating ~ complexity_rating + obj_comp +
-  disorder + (disorder | subject), data = data_test_fold1)
+  disorder + ((complexity_rating + obj_comp + disorder) | subject), data = data_test_fold1)
 
   capture.output(summary(model.0), file = "model_fits/Table_3_mediationanalysis.txt")
   capture.output(summary(model.M), file = "model_fits/Table_3_mediationanalysis.txt", append = TRUE)

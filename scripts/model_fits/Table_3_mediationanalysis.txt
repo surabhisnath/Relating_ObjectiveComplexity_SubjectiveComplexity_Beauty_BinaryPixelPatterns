@@ -1,0 +1,96 @@
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: beauty_rating ~ obj_comp + disorder + ((obj_comp + disorder) |  
+    subject)
+   Data: data_test_fold1
+
+REML criterion at convergence: 3189.1
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.1755 -0.5932  0.0573  0.6282  3.4592 
+
+Random effects:
+ Groups   Name        Variance Std.Dev. Corr       
+ subject  (Intercept) 0.17190  0.4146              
+          obj_comp    0.06989  0.2644   -0.12      
+          disorder    0.10989  0.3315   -0.32 -0.16
+ Residual             0.35161  0.5930              
+Number of obs: 1560, groups:  subject, 78
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)    
+(Intercept)  0.03073    0.04942 77.12726   0.622    0.536    
+obj_comp     0.38247    0.04269 71.73481   8.958 2.57e-13 ***
+disorder    -0.55516    0.04090 76.78101 -13.575  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+         (Intr) obj_cm
+obj_comp -0.080       
+disorder -0.275 -0.054
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: complexity_rating ~ obj_comp + (obj_comp | subject)
+   Data: data_test_fold1
+
+REML criterion at convergence: 3597.8
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4294 -0.5930  0.0025  0.6070  2.9470 
+
+Random effects:
+ Groups   Name        Variance Std.Dev. Corr
+ subject  (Intercept) 0.1775   0.4213       
+          obj_comp    0.1291   0.3593   0.54
+ Residual             0.5094   0.7137       
+Number of obs: 1560, groups:  subject, 78
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)    
+(Intercept)  0.01287    0.05107 77.05987   0.252    0.802    
+obj_comp     0.96244    0.05366 63.35371  17.937   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+         (Intr)
+obj_comp 0.388 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+beauty_rating ~ complexity_rating + obj_comp + disorder + ((complexity_rating +  
+    obj_comp + disorder) | subject)
+   Data: data_test_fold1
+
+REML criterion at convergence: 2931.8
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.4727 -0.5669  0.0355  0.5481  3.3814 
+
+Random effects:
+ Groups   Name              Variance Std.Dev. Corr             
+ subject  (Intercept)       0.11836  0.3440                    
+          complexity_rating 0.08620  0.2936   -0.30            
+          obj_comp          0.07141  0.2672   -0.05 -0.57      
+          disorder          0.09727  0.3119   -0.33  0.53 -0.43
+ Residual                   0.28559  0.5344                    
+Number of obs: 1560, groups:  subject, 78
+
+Fixed effects:
+                  Estimate Std. Error       df t value Pr(>|t|)    
+(Intercept)        0.02392    0.04212 79.15842   0.568   0.5718    
+complexity_rating  0.32547    0.04099 77.32819   7.940 1.29e-11 ***
+obj_comp           0.08572    0.04732 71.20820   1.812   0.0743 .  
+disorder          -0.49951    0.03881 75.56487 -12.869  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) cmplx_ obj_cm
+cmplxty_rtn -0.242              
+obj_comp    -0.003 -0.571       
+disorder    -0.278  0.405 -0.222
