@@ -84,7 +84,7 @@ def calculate_H(flatgrid, grid_size):
         probabilities = get_sliding_window_probabilities(windows)
         Hs.append(entropy(probabilities))
 
-    return Hs[1], Hs[grid_size], np.mean(Hs)
+    return Hs[1], np.mean(Hs)
 
 if __name__ == "__main__":
     grid_size = 15
@@ -96,17 +96,17 @@ if __name__ == "__main__":
     #    4) Random pattern
 
     all_black = np.ones(grid_size * grid_size, dtype=int)
-    # assert calculate_entropy_profile(all_black, grid_size) == 0.0
+    assert calculate_H(all_black, grid_size) == (0.0, 0.0)
     print(calculate_H(all_black, grid_size))
 
     grid_with_one_centre = np.zeros(grid_size * grid_size, dtype=int)
     grid_with_one_centre[(grid_size * grid_size) //2] = 1
-    # assert calculate_H(grid_with_one_centre, grid_size) == 0.25
+    assert calculate_H(grid_with_one_centre, grid_size) == (0.18454249646999404, 2.74023274483865)
     print(calculate_H(grid_with_one_centre, grid_size))
 
     checkerboard = np.zeros(grid_size * grid_size, dtype=int)
     checkerboard[1::2] = 1
-    # assert calculate_H(checkerboard, grid_size) == 0.5
+    assert calculate_H(checkerboard, grid_size) == (1.0, 0.932628161077425)
     print(calculate_H(checkerboard, grid_size))
 
     random = np.random.choice([0, 1], size=(grid_size, grid_size))

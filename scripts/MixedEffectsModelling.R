@@ -93,6 +93,7 @@
 # Notes:
 # participant in paper is subject here.
 # intricacy from paper is intricacy_4 here.
+# multiscale_entropy from paper is mean_entropy here.
 
 ############### COMPLEXITY MODELS ##############
 
@@ -124,6 +125,8 @@ all_models_complexity <- list(
   "density + (1 | subject)",
   "entropy + (1 | subject)",
   "mean_entropy + (1 | subject)",
+  "H_2 + (1 | subject)",
+  "H_mean + (1 | subject)",
   "LSC + (1 | subject)",
   "KC + (1 | subject)",
   "asymm + (1 | subject)",
@@ -133,19 +136,24 @@ all_models_complexity <- list(
   "LSC + density + (1 | subject)",
   "LSC + entropy + (1 | subject)",
   "LSC + mean_entropy + (1 | subject)",
+  "LSC + H_2 + (1 | subject)",
   "LSC + asymm + (1 | subject)",
   "LSC + intricacy_4 + (1 | subject)",
   "LSC + intricacy_8 + (1 | subject)",
   "LSC + quadtree + (1 | subject)",
+  "LSC + H_2 + intricacy_4 + (1 | subject)",
   "LSC + intricacy_4 + intricacy_8 + (1 | subject)",
-  "LSC + intricacy_4 + LSC:intricacy_4 + (1 | subject)",
+  "LSC * intricacy_4 + (1 | subject)",
   "LSC + intricacy_4 + (LSC | subject)",
   "LSC + intricacy_4 + (intricacy_4 | subject)",
   "LSC + intricacy_4 + ((LSC + intricacy_4) | subject)",
   "LSC * intricacy_4 + ((LSC + intricacy_4) | subject)",
+  "H_2 + intricacy_4 + (1 | subject)",
+  "H_2 + intricacy_4 + ((H_2 + intricacy_4) | subject)",
+  "H_2 * intricacy_4 + ((H_2 + intricacy_4) | subject)",
   "quadtree + intricacy_4 + (1 | subject)",
-  "quadtree + intricacy_4 + (quadtree | subject)",
-  "quadtree + intricacy_4 + ((intricacy_4 + intricacy_4) | subject)",
+  "quadtree + intricacy_4 + ((quadtree + intricacy_4) | subject)",
+  "quadtree * intricacy_4 + ((quadtree + intricacy_4) | subject)",
   "LSCsq + intricacy_4sq + (1 | subject)",
   "LSC + LSCsq + intricacy_4 + intricacy_4sq + (1 | subject)",
   "neighbourhood_size + tot_outertot + IC + (1 | subject)",
@@ -369,9 +377,9 @@ all_models_complexity <- list(
     "obj_comp + disorder + ((obj_comp + disorder) | subject)",
     "obj_comp * disorder + ((obj_comp + disorder) | subject)",
     "trial + (1 | subject)",
-    "complexity_rating * disorder + trial + ((obj_comp + disorder) | subject)",
+    "complexity_rating * disorder + trial + ((complexity_rating + disorder) | subject)",
     "previous_beauty_rating + (1 | subject)",
-    "complexity_rating * disorder + previous_beauty_rating + ((obj_comp + disorder) | subject)",
+    "complexity_rating * disorder + previous_beauty_rating + ((complexity_rating + disorder) | subject)",
     "complexity_rating * trial + (1 | subject)"
   )
 }
@@ -397,10 +405,6 @@ all_models_complexity <- list(
     control = lmerControl(optimizer = "bobyqa"))
     f3 <- lmer(fullformula, data = data_train_fold3,
     control = lmerControl(optimizer = "bobyqa"))
-    print(formula)
-    print(summary(f1))
-    print(summary(f2))
-    print(summary(f3))
     metrics <- modelanalysis("beauty", num_folds,
     list(f1, f2, f3), list(data_train_fold1, data_train_fold2,
     data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3),
