@@ -471,19 +471,21 @@ all_models_complexity <- list(
   mean_pattern <- aggregate(data, list(data$pattern), mean)
   mean_pattern_bydis <- mean_pattern[order(mean_pattern$disorder), ]
 
-  # top 15 elements of mean_pattern_bydisorder
-  high_dis <- tail(mean_pattern_bydis, 15)
+  # top 10% elements of mean_pattern_bydisorder
+  num_dis <- 22
+  high_dis <- tail(mean_pattern_bydis, num_dis)
   # bottom 15 elements of mean_pattern_dis
-  low_dis <- head(mean_pattern_bydis, 15)
+  low_dis <- head(mean_pattern_bydis, num_dis)
   
   high_dis_by_comp <- high_dis[order(high_dis$complexity_rating), ]
   low_dis_by_comp <- low_dis[order(low_dis$complexity_rating), ]
-
+  mid_start <- (num_dis - 2) %/% 2 + 1
+  mid_end <- mid_start + 2
   high_dis_low_comp <- head(high_dis_by_comp, 3)
-  high_dis_mid_comp <- high_dis_by_comp[7:9,]
+  high_dis_mid_comp <- high_dis_by_comp[mid_start:mid_end,]
   high_dis_high_comp <- tail(high_dis_by_comp, 3)
   low_dis_low_comp <- head(low_dis_by_comp, 3)
-  low_dis_mid_comp <- low_dis_by_comp[7:9,]
+  low_dis_mid_comp <- low_dis_by_comp[mid_start:mid_end,]
   low_dis_high_comp <- tail(low_dis_by_comp, 3)
 
   print(high_dis_low_comp$Group.1)
