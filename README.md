@@ -4,7 +4,7 @@
 [![R](https://img.shields.io/badge/-script-276DC3.svg?style=flat&logo=R)](https://cran.r-project.org)
 [![RStudio](https://img.shields.io/badge/RStudio-project-75AADB.svg?style=flat&logo=RStudio)](https://www.rstudio.com)
 
-This repository contains the data and scripts for the paper [Relating Objective Complexity, Subjective Complexity and Beauty in Binary Pixel Patterns](https://psyarxiv.com/nuep7/) submitted to [PACA](https://www.apa.org/pubs/journals/aca). 
+This repository contains the data and scripts for the paper [Relating Objective Complexity, Subjective Complexity and Beauty in Binary Pixel Patterns](https://psyarxiv.com/nuep7/) accepted at [PACA](https://www.apa.org/pubs/journals/aca). 
 Authors: [Surabhi S Nath](https://surabhisnath.github.io), [Franziska Brändle](https://www.kyb.tuebingen.mpg.de/person/104445/250676), [Eric Schulz](https://www.kyb.tuebingen.mpg.de/person/103915), [Peter Dayan](https://www.mpg.de/12309357/biologische-kybernetik-dayan)#, [Aenne Brielmann](https://www.kyb.tuebingen.mpg.de/person/58620/2549)# (# indicates equal contribution)
 
 ## Abstract
